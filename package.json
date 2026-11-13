@@ -1,0 +1,23 @@
+{
+  "name": "fitness-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web-приложение формирования индивидуальных тренировочных программ с алгоритмом адаптации рабочих весов",
+  "type": "module",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "db:init": "node scripts/init-db.js",
+    "admin:create": "node scripts/create-admin.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "pg": "^8.13.0"
+  }
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход — Тренировочный дневник</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="auth">
+    <section class="auth__intro">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>Тренировочный дневник</a>
+      <h1 class="auth__title">Рабочий вес по результатам, а не наугад</h1>
+      <p class="auth__lead">Программа под вашу цель и уровень подготовки. После каждой тренировки приложение пересчитывает веса на следующую.</p>
+    </section>
+
+    <section class="auth__form-area">
+      <form id="login-form" novalidate>
+        <h2>Вход</h2>
+        <div class="alert alert--success" id="form-success" role="status" hidden></div>
+        <div class="alert alert--error" id="form-error" role="alert" hidden></div>
+
+        <div class="field">
+          <label for="login">Логин</label>
+          <input type="text" id="login" name="login" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="button button--primary button--wide">Войти</button>
+        <p class="form-footer">Нет учётной записи? <a href="/register">Зарегистрироваться</a></p>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="/js/login.js"></script>
+</body>
+</html>

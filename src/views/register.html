@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Регистрация — Тренировочный дневник</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="auth">
+    <section class="auth__intro">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>Тренировочный дневник</a>
+      <h1 class="auth__title">Начните вести тренировки</h1>
+      <p class="auth__lead">После регистрации заполните профиль: цель, уровень подготовки и число тренировок в неделю.</p>
+    </section>
+
+    <section class="auth__form-area">
+      <form id="register-form" novalidate>
+        <h2>Регистрация</h2>
+        <div class="alert alert--error" id="form-error" role="alert" hidden></div>
+
+        <div class="field">
+          <label for="login">Логин</label>
+          <input type="text" id="login" name="login" autocomplete="username" required
+                 minlength="3" maxlength="50" aria-describedby="login-hint">
+          <span class="field__hint" id="login-hint">От 3 до 50 символов: латинские буквы, цифры, «_», «.», «-»</span>
+        </div>
+        <div class="field">
+          <label for="email">Электронная почта</label>
+          <input type="email" id="email" name="email" autocomplete="email" required maxlength="100">
+        </div>
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" name="password" autocomplete="new-password" required
+                 minlength="8" aria-describedby="password-hint">
+          <span class="field__hint" id="password-hint">Не менее 8 символов, хотя бы одна буква и одна цифра</span>
+        </div>
+        <div class="field">
+          <label for="password-confirm">Повторите пароль</label>
+          <input type="password" id="password-confirm" name="passwordConfirm" autocomplete="new-password" required>
+        </div>
+
+        <button type="submit" class="button button--primary button--wide">Зарегистрироваться</button>
+        <p class="form-footer">Уже зарегистрированы? <a href="/login">Войти</a></p>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="/js/register.js"></script>
+</body>
+</html>

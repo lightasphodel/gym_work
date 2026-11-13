@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Панель администратора — Тренировочный дневник</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>Тренировочный дневник</a>
+      <nav class="nav" aria-label="Основная навигация">
+        <a href="/admin" aria-current="page">Панель администратора</a>
+      </nav>
+      <div class="user-box">
+        <span data-user-login></span>
+        <button type="button" class="button button--secondary" id="logout-button">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1>Панель администратора</h1>
+    <div class="alert alert--error" id="page-error" role="alert" hidden></div>
+    <section class="panel" aria-labelledby="account-title">
+      <h2 id="account-title">Учётная запись</h2>
+      <dl class="details">
+        <dt>Логин</dt><dd data-user-field="login"></dd>
+        <dt>Электронная почта</dt><dd data-user-field="email"></dd>
+        <dt>Роль</dt><dd data-user-field="role"></dd>
+        <dt>Дата регистрации</dt><dd data-user-field="createdAt"></dd>
+      </dl>
+    </section>
+  </main>
+  <script type="module" src="/js/session.js"></script>
+</body>
+</html>
