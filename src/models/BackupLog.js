@@ -4,14 +4,29 @@ import { query } from '../config/db.js';
  * Запись журнала резервного копирования.
  */
 export class BackupLog {
+  #id;
+  #adminId;
+  #fileName;
+  #type;
+  #createdAt;
+  #status;
+
+  /** @param {object} row строка таблицы backup_logs */
   constructor(row) {
-    this.id = row.id;
-    this.adminId = row.admin_id;
-    this.fileName = row.file_name;
-    this.type = row.type;
-    this.createdAt = row.created_at;
-    this.status = row.status;
+    this.#id = row.id;
+    this.#adminId = row.admin_id;
+    this.#fileName = row.file_name;
+    this.#type = row.type;
+    this.#createdAt = row.created_at;
+    this.#status = row.status;
   }
+
+  get id() { return this.#id; }
+  get adminId() { return this.#adminId; }
+  get fileName() { return this.#fileName; }
+  get type() { return this.#type; }
+  get createdAt() { return this.#createdAt; }
+  get status() { return this.#status; }
 
   /**
    * @param {{adminId: number, fileName: string, type: string, status: string}} data

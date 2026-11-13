@@ -4,12 +4,23 @@ import { query } from '../config/db.js';
  * Тренировочный день программы (композиция с Program).
  */
 export class ProgramDay {
+  #id;
+  #programId;
+  #dayNumber;
+  #title;
+
+  /** @param {object} row строка таблицы program_days */
   constructor(row) {
-    this.id = row.id;
-    this.programId = row.program_id;
-    this.dayNumber = row.day_number;
-    this.title = row.title;
+    this.#id = row.id;
+    this.#programId = row.program_id;
+    this.#dayNumber = row.day_number;
+    this.#title = row.title;
   }
+
+  get id() { return this.#id; }
+  get programId() { return this.#programId; }
+  get dayNumber() { return this.#dayNumber; }
+  get title() { return this.#title; }
 
   /**
    * @param {number} programId

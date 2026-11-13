@@ -13,19 +13,41 @@ const FIELDS = {
  * Тренировочный профиль пользователя (композиция с User).
  */
 export class TrainingProfile {
+  #id;
+  #userId;
+  #goal;
+  #level;
+  #workoutsPerWeek;
+  #equipment;
+  #bodyWeight;
+
+  /** @param {object} row строка таблицы training_profiles */
   constructor(row) {
-    this.id = row.id;
-    this.userId = row.user_id;
-    this.goal = row.goal;
-    this.level = row.level;
-    this.workoutsPerWeek = row.workouts_per_week;
-    this.equipment = row.equipment ?? [];
-    this.bodyWeight = row.body_weight;
+    this.#id = row.id;
+    this.#userId = row.user_id;
+    this.#goal = row.goal;
+    this.#level = row.level;
+    this.#workoutsPerWeek = row.workouts_per_week;
+    this.#equipment = row.equipment ?? [];
+    this.#bodyWeight = row.body_weight;
   }
 
-  /** Профиль заполнен, если указаны цель, уровень и число тренировок в неделю. */
+  get id() { return this.#id; }
+  get userId() { return this.#userId; }
+  get goal() { return this.#goal; }
+  get level() { return this.#level; }
+  get workoutsPerWeek() { return this.#workoutsPerWeek; }
+  /** Копия списка: изменить инвентарь можно только методом update(). */
+  get equipment() { return [...this.#equipment]; }
+  get bodyWeight() { return this.#bodyWeight; }
+
+  /**
+   * Профиль заполнен, если указаны цель, уровень, число тренировок в неделю
+   * и масса тела (нужна для расчёта стартовых весов).
+   * @returns {boolean}
+   */
   isComplete() {
-    return Boolean(this.goal && this.level && this.workoutsPerWeek);
+    return Boolean(this.#goal && this.#level && this.#workoutsPerWeek && this.#bodyWeight > 0);
   }
 
   /**
@@ -36,12 +58,17 @@ export class TrainingProfile {
     const params = [];
     const set = buildSet(FIELDS, data, params);
     if (!set) return;
-    params.push(this.id);
+    params.push(this.#id);
     const { rows } = await query(
       `UPDATE training_profiles SET ${set} WHERE id = $${params.length} RETURNING *`,
       params,
     );
-    Object.assign(this, new TrainingProfile(rows[0]));
+    const r = rows[0];
+    this.#goal = r.goal;
+    this.#level = r.level;
+    this.#workoutsPerWeek = r.workouts_per_week;
+    this.#equipment = r.equipment ?? [];
+    this.#bodyWeight = r.body_weight;
   }
 
   /**

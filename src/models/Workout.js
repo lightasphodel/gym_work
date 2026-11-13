@@ -1,53 +1,74 @@
 import { query, withTransaction } from '../config/db.js';
+import { WorkoutSet } from './WorkoutSet.js';
 
 /**
- * Выполненная тренировка. Включает подходы WorkoutSet (композиция).
+ * Выполненная тренировка. Включает подходы WorkoutSet (композиция 1..*).
+ * Подходы хранятся в закрытом поле #sets — это реализация линии композиции
+ * Workout ◆— WorkoutSet на диаграмме классов, отдельным атрибутом она не показывается.
  */
 export class Workout {
-  constructor(row) {
-    this.id = row.id;
-    this.userId = row.user_id;
-    this.programDayId = row.program_day_id;
-    this.date = row.date;
-    this.tonnage = row.tonnage;
-    this.isCompleted = row.is_completed;
-  }
+  #id;
+  #userId;
+  #programDayId;
+  #date;
+  #tonnage;
+  #isCompleted;
+  /** @type {WorkoutSet[]} */
+  #sets;
 
   /**
-   * Расчёт тоннажа тренировки T = Σ Wi · ri (формула 1.3) и сохранение его в записи.
-   * @param {import('pg').PoolClient} [client] подключение текущей транзакции
-   * @returns {Promise<number>}
+   * @param {object} row строка таблицы workouts
+   * @param {WorkoutSet[]} [sets] подходы тренировки
    */
-  async calcTonnage(client) {
-    const db = client ?? { query };
-    const { rows } = await db.query(
-      `UPDATE workouts
-          SET tonnage = (SELECT COALESCE(SUM(weight * reps), 0)
-                           FROM workout_sets WHERE workout_id = $1)
-        WHERE id = $1
-        RETURNING tonnage`,
-      [this.id],
-    );
-    this.tonnage = rows[0].tonnage;
-    return this.tonnage;
+  constructor(row, sets = []) {
+    this.#id = row.id;
+    this.#userId = row.user_id;
+    this.#programDayId = row.program_day_id;
+    this.#date = row.date;
+    this.#tonnage = row.tonnage;
+    this.#isCompleted = row.is_completed;
+    this.#sets = [...sets];
+  }
+
+  get id() { return this.#id; }
+  get userId() { return this.#userId; }
+  get programDayId() { return this.#programDayId; }
+  get date() { return this.#date; }
+  get tonnage() { return this.#tonnage; }
+  get isCompleted() { return this.#isCompleted; }
+  /** Копия списка подходов: изменить его снаружи нельзя. */
+  get sets() { return [...this.#sets]; }
+
+  /**
+   * Тоннаж тренировки T = Σ Wi · ri (формула 1.3) — сумма объёмов подходов WorkoutSet.volume().
+   * Результат округляется до 0,01 (точность столбца workouts.tonnage).
+   * @returns {number}
+   */
+  calcTonnage() {
+    const sum = this.#sets.reduce((acc, set) => acc + set.volume(), 0);
+    return Math.round(sum * 100) / 100;
   }
 
   /** Удаление тренировки вместе с подходами (композиция, ON DELETE CASCADE). */
   async remove() {
-    await query('DELETE FROM workouts WHERE id = $1', [this.id]);
+    await query('DELETE FROM workouts WHERE id = $1', [this.#id]);
   }
 
   /**
+   * Тренировка вместе с подходами.
    * @param {number} id
    * @returns {Promise<Workout|null>}
    */
   static async findById(id) {
     const { rows } = await query('SELECT * FROM workouts WHERE id = $1', [id]);
-    return rows.length ? new Workout(rows[0]) : null;
+    if (!rows.length) return null;
+    const sets = await WorkoutSet.findByWorkout(id);
+    return new Workout(rows[0], sets);
   }
 
   /**
-   * Сохранение тренировки и подходов в одной транзакции с расчётом тоннажа.
+   * Сохранение тренировки и подходов в одной транзакции.
+   * Тоннаж считается calcTonnage() по созданным подходам и записывается в той же транзакции.
    * Тренировка считается завершённой, если по каждому упражнению дня внесены все подходы.
    * @param {number} userId
    * @param {number} dayId
@@ -55,6 +76,11 @@ export class Workout {
    * @returns {Promise<Workout>}
    */
   static async create(userId, dayId, sets) {
+    if (!Array.isArray(sets) || sets.length === 0) {
+      const err = new Error('Тренировка должна содержать хотя бы один подход');
+      err.status = 400;
+      throw err;
+    }
     return withTransaction(async (client) => {
       // Подходы должны относиться к упражнениям выбранного тренировочного дня.
       const peRes = await client.query(
@@ -72,34 +98,37 @@ export class Workout {
         'INSERT INTO workouts (user_id, program_day_id) VALUES ($1, $2) RETURNING *',
         [userId, dayId],
       );
-      const workout = new Workout(rows[0]);
+      const workoutRow = rows[0];
 
+      const created = [];
       for (const s of sets) {
-        await client.query(
+        const setRes = await client.query(
           `INSERT INTO workout_sets (workout_id, program_exercise_id, set_no, weight, reps)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [workout.id, s.programExerciseId, s.setNo, s.weight, s.reps],
+           VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+          [workoutRow.id, s.programExerciseId, s.setNo, s.weight, s.reps],
         );
+        created.push(new WorkoutSet(setRes.rows[0]));
       }
 
-      await workout.calcTonnage(client);
+      const tonnage = new Workout(workoutRow, created).calcTonnage();
 
       const done = new Map();
-      for (const s of sets) {
+      for (const s of created) {
         done.set(s.programExerciseId, (done.get(s.programExerciseId) ?? 0) + 1);
       }
       const isCompleted =
         planned.size > 0 && [...planned].every(([peId, plan]) => (done.get(peId) ?? 0) >= plan);
-      if (isCompleted) {
-        await client.query('UPDATE workouts SET is_completed = TRUE WHERE id = $1', [workout.id]);
-        workout.isCompleted = true;
-      }
-      return workout;
+
+      const saved = await client.query(
+        'UPDATE workouts SET tonnage = $1, is_completed = $2 WHERE id = $3 RETURNING *',
+        [tonnage, isCompleted, workoutRow.id],
+      );
+      return new Workout(saved.rows[0], created);
     });
   }
 
   /**
-   * Тренировки пользователя за период (включительно).
+   * Тренировки пользователя за период (включительно) вместе с подходами.
    * @param {number} userId
    * @param {string} from 'YYYY-MM-DD'
    * @param {string} to   'YYYY-MM-DD'
@@ -112,6 +141,18 @@ export class Workout {
         ORDER BY date, id`,
       [userId, from, to],
     );
-    return rows.map((r) => new Workout(r));
+    if (!rows.length) return [];
+
+    // Подходы всех найденных тренировок — одним запросом.
+    const setRes = await query(
+      'SELECT * FROM workout_sets WHERE workout_id = ANY($1) ORDER BY id',
+      [rows.map((r) => r.id)],
+    );
+    const byWorkout = new Map();
+    for (const r of setRes.rows) {
+      if (!byWorkout.has(r.workout_id)) byWorkout.set(r.workout_id, []);
+      byWorkout.get(r.workout_id).push(new WorkoutSet(r));
+    }
+    return rows.map((r) => new Workout(r, byWorkout.get(r.id) ?? []));
   }
 }

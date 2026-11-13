@@ -11,28 +11,47 @@ const FIELDS = { title: 'title', goal: 'goal', level: 'level' };
  * Состоит из тренировочных дней ProgramDay (композиция).
  */
 export class Program {
+  #id;
+  #ownerId;
+  #title;
+  #goal;
+  #level;
+  #isTemplate;
+  #status;
+  #createdAt;
+
+  /** @param {object} row строка таблицы programs */
   constructor(row) {
-    this.id = row.id;
-    this.ownerId = row.owner_id;
-    this.title = row.title;
-    this.goal = row.goal;
-    this.level = row.level;
-    this.isTemplate = row.is_template;
-    this.status = row.status;
-    this.createdAt = row.created_at;
+    this.#id = row.id;
+    this.#ownerId = row.owner_id;
+    this.#title = row.title;
+    this.#goal = row.goal;
+    this.#level = row.level;
+    this.#isTemplate = row.is_template;
+    this.#status = row.status;
+    this.#createdAt = row.created_at;
   }
+
+  get id() { return this.#id; }
+  get ownerId() { return this.#ownerId; }
+  get title() { return this.#title; }
+  get goal() { return this.#goal; }
+  get level() { return this.#level; }
+  get isTemplate() { return this.#isTemplate; }
+  get status() { return this.#status; }
+  get createdAt() { return this.#createdAt; }
 
   /**
    * Создание личной копии шаблонной программы со всеми днями и упражнениями (ФТ-16).
-   * Копия создаётся в статусе DRAFT.
+   * Копия создаётся в статусе DRAFT одним вызовом Program.create (одна транзакция).
    * @param {number} userId
    * @returns {Promise<Program>}
    */
   async copyFor(userId) {
-    if (!this.isTemplate) {
+    if (!this.#isTemplate) {
       throw new Error('Копировать можно только шаблонную программу');
     }
-    const days = await ProgramDay.findByProgram(this.id);
+    const days = await ProgramDay.findByProgram(this.#id);
     const daysData = [];
     for (const day of days) {
       const exercises = await ProgramExercise.findByDay(day.id);
@@ -52,9 +71,9 @@ export class Program {
     }
     return Program.create({
       ownerId: userId,
-      title: this.title,
-      goal: this.goal,
-      level: this.level,
+      title: this.#title,
+      goal: this.#goal,
+      level: this.#level,
       isTemplate: false,
       status: ProgramStatus.DRAFT,
       days: daysData,
@@ -69,12 +88,15 @@ export class Program {
     const params = [];
     const set = buildSet(FIELDS, data, params);
     if (!set) return;
-    params.push(this.id);
+    params.push(this.#id);
     const { rows } = await query(
       `UPDATE programs SET ${set} WHERE id = $${params.length} RETURNING *`,
       params,
     );
-    Object.assign(this, new Program(rows[0]));
+    const r = rows[0];
+    this.#title = r.title;
+    this.#goal = r.goal;
+    this.#level = r.level;
   }
 
   /**
@@ -83,29 +105,30 @@ export class Program {
    */
   async activate() {
     await withTransaction(async (client) => {
-      if (this.ownerId !== null) {
+      if (this.#ownerId !== null) {
         await client.query(
           `UPDATE programs SET status = $1
             WHERE owner_id = $2 AND status = $3 AND id <> $4`,
-          [ProgramStatus.ARCHIVED, this.ownerId, ProgramStatus.ACTIVE, this.id],
+          [ProgramStatus.ARCHIVED, this.#ownerId, ProgramStatus.ACTIVE, this.#id],
         );
       }
       await client.query('UPDATE programs SET status = $1 WHERE id = $2', [
         ProgramStatus.ACTIVE,
-        this.id,
+        this.#id,
       ]);
     });
-    this.status = ProgramStatus.ACTIVE;
+    this.#status = ProgramStatus.ACTIVE;
   }
 
   /** Перевод программы в архив. */
   async archive() {
-    await query('UPDATE programs SET status = $1 WHERE id = $2', [ProgramStatus.ARCHIVED, this.id]);
-    this.status = ProgramStatus.ARCHIVED;
+    await query('UPDATE programs SET status = $1 WHERE id = $2', [ProgramStatus.ARCHIVED, this.#id]);
+    this.#status = ProgramStatus.ARCHIVED;
   }
 
   /**
    * Создание программы вместе с днями и упражнениями в одной транзакции.
+   * Это единственный способ создать ProgramDay и ProgramExercise (композиция).
    * @param {{
    *   ownerId: number|null, title: string, goal: string, level: string,
    *   isTemplate?: boolean, status?: string,
@@ -152,6 +175,15 @@ export class Program {
   }
 
   /**
+   * @param {number} id
+   * @returns {Promise<Program|null>}
+   */
+  static async findById(id) {
+    const { rows } = await query('SELECT * FROM programs WHERE id = $1', [id]);
+    return rows.length ? new Program(rows[0]) : null;
+  }
+
+  /**
    * Активная программа пользователя.
    * @param {number} userId
    * @returns {Promise<Program|null>}
@@ -164,5 +196,16 @@ export class Program {
       [userId, ProgramStatus.ACTIVE],
     );
     return rows.length ? new Program(rows[0]) : null;
+  }
+
+  /**
+   * Шаблонные программы (ФТ-14, ФТ-16).
+   * @returns {Promise<Program[]>}
+   */
+  static async findTemplates() {
+    const { rows } = await query(
+      'SELECT * FROM programs WHERE is_template ORDER BY title, id',
+    );
+    return rows.map((r) => new Program(r));
   }
 }

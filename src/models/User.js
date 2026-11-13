@@ -10,25 +10,46 @@ import { Role } from './enums.js';
  *  - isBlocked   — блокировка администратором (ФТ-18), снимается только администратором;
  *  - lockedUntil — временная блокировка входа после MAX_FAILED_LOGINS неудачных попыток
  *                  на LOCK_MINUTES минут (ФТ-02).
+ *
+ * passwordHash, failedLogins и lockedUntil наружу не отдаются (геттеров нет):
+ * их состояние доступно только через checkPassword() и isLocked().
  */
 export class User {
   /** Число неудачных попыток входа подряд, после которого вход временно блокируется. */
-  static #MAX_FAILED_LOGINS = 5;
+  static #MAX_FAILED_LOGINS = 5; // {readOnly}
 
   /** Длительность временной блокировки входа, мин. */
-  static #LOCK_MINUTES = 15;
+  static #LOCK_MINUTES = 15; // {readOnly}
 
+  #id;
+  #login;
+  #email;
+  #passwordHash;
+  #role;
+  #isBlocked;
+  #failedLogins;
+  #lockedUntil;
+  #createdAt;
+
+  /** @param {object} row строка таблицы users */
   constructor(row) {
-    this.id = row.id;
-    this.login = row.login;
-    this.email = row.email;
-    this.passwordHash = row.password_hash;
-    this.role = row.role;
-    this.isBlocked = row.is_blocked;
-    this.failedLogins = row.failed_logins;
-    this.lockedUntil = row.locked_until;
-    this.createdAt = row.created_at;
+    this.#id = row.id;
+    this.#login = row.login;
+    this.#email = row.email;
+    this.#passwordHash = row.password_hash;
+    this.#role = row.role;
+    this.#isBlocked = row.is_blocked;
+    this.#failedLogins = row.failed_logins;
+    this.#lockedUntil = row.locked_until;
+    this.#createdAt = row.created_at;
   }
+
+  get id() { return this.#id; }
+  get login() { return this.#login; }
+  get email() { return this.#email; }
+  get role() { return this.#role; }
+  get isBlocked() { return this.#isBlocked; }
+  get createdAt() { return this.#createdAt; }
 
   /**
    * Проверка пароля по хешу bcrypt.
@@ -36,12 +57,15 @@ export class User {
    * @returns {Promise<boolean>}
    */
   async checkPassword(password) {
-    return bcrypt.compare(password, this.passwordHash);
+    return bcrypt.compare(password, this.#passwordHash);
   }
 
-  /** Действует ли временная блокировка входа. */
+  /**
+   * Действует ли временная блокировка входа.
+   * @returns {boolean}
+   */
   isLocked() {
-    return this.lockedUntil instanceof Date && this.lockedUntil.getTime() > Date.now();
+    return this.#lockedUntil instanceof Date && this.#lockedUntil.getTime() > Date.now();
   }
 
   /**
@@ -57,48 +81,35 @@ export class User {
                                    ELSE locked_until END
         WHERE id = $1
         RETURNING failed_logins, locked_until`,
-      [this.id, User.#MAX_FAILED_LOGINS, User.#LOCK_MINUTES],
+      [this.#id, User.#MAX_FAILED_LOGINS, User.#LOCK_MINUTES],
     );
-    this.failedLogins = rows[0].failed_logins;
-    this.lockedUntil = rows[0].locked_until;
+    this.#failedLogins = rows[0].failed_logins;
+    this.#lockedUntil = rows[0].locked_until;
   }
 
   /** Сброс счётчика неудачных попыток и временной блокировки (после успешного входа). */
   async resetFailedLogins() {
-    if (this.failedLogins === 0 && this.lockedUntil === null) return;
-    await query('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = $1', [this.id]);
-    this.failedLogins = 0;
-    this.lockedUntil = null;
+    if (this.#failedLogins === 0 && this.#lockedUntil === null) return;
+    await query('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = $1', [this.#id]);
+    this.#failedLogins = 0;
+    this.#lockedUntil = null;
   }
 
   /** Блокировка учётной записи администратором. */
   async block() {
-    await query('UPDATE users SET is_blocked = TRUE WHERE id = $1', [this.id]);
-    this.isBlocked = true;
+    await query('UPDATE users SET is_blocked = TRUE WHERE id = $1', [this.#id]);
+    this.#isBlocked = true;
   }
 
   /** Разблокировка учётной записи; сбрасывает и временную блокировку входа. */
   async unblock() {
     await query(
       'UPDATE users SET is_blocked = FALSE, failed_logins = 0, locked_until = NULL WHERE id = $1',
-      [this.id],
+      [this.#id],
     );
-    this.isBlocked = false;
-    this.failedLogins = 0;
-    this.lockedUntil = null;
-  }
-
-  /** Хеш пароля и счётчик попыток наружу не передаются. */
-  toJSON() {
-    return {
-      id: this.id,
-      login: this.login,
-      email: this.email,
-      role: this.role,
-      isBlocked: this.isBlocked,
-      isLocked: this.isLocked(),
-      createdAt: this.createdAt,
-    };
+    this.#isBlocked = false;
+    this.#failedLogins = 0;
+    this.#lockedUntil = null;
   }
 
   /**

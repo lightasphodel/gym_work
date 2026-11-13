@@ -4,14 +4,29 @@ import { query } from '../config/db.js';
  * Личный рекорд пользователя в упражнении.
  */
 export class PersonalRecord {
+  #id;
+  #userId;
+  #exerciseId;
+  #type;
+  #value;
+  #achievedAt;
+
+  /** @param {object} row строка таблицы personal_records */
   constructor(row) {
-    this.id = row.id;
-    this.userId = row.user_id;
-    this.exerciseId = row.exercise_id;
-    this.type = row.type;
-    this.value = row.value;
-    this.achievedAt = row.achieved_at;
+    this.#id = row.id;
+    this.#userId = row.user_id;
+    this.#exerciseId = row.exercise_id;
+    this.#type = row.type;
+    this.#value = row.value;
+    this.#achievedAt = row.achieved_at;
   }
+
+  get id() { return this.#id; }
+  get userId() { return this.#userId; }
+  get exerciseId() { return this.#exerciseId; }
+  get type() { return this.#type; }
+  get value() { return this.#value; }
+  get achievedAt() { return this.#achievedAt; }
 
   /**
    * Текущие (наилучшие) рекорды пользователя в упражнении — по одному на каждый тип.

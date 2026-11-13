@@ -4,14 +4,29 @@ import { query } from '../config/db.js';
  * Запись истории изменения рабочего веса (результат алгоритма адаптации).
  */
 export class WeightHistory {
+  #id;
+  #programExerciseId;
+  #date;
+  #oldWeight;
+  #newWeight;
+  #decision;
+
+  /** @param {object} row строка таблицы weight_history */
   constructor(row) {
-    this.id = row.id;
-    this.programExerciseId = row.program_exercise_id;
-    this.date = row.date;
-    this.oldWeight = row.old_weight;
-    this.newWeight = row.new_weight;
-    this.decision = row.decision;
+    this.#id = row.id;
+    this.#programExerciseId = row.program_exercise_id;
+    this.#date = row.date;
+    this.#oldWeight = row.old_weight;
+    this.#newWeight = row.new_weight;
+    this.#decision = row.decision;
   }
+
+  get id() { return this.#id; }
+  get programExerciseId() { return this.#programExerciseId; }
+  get date() { return this.#date; }
+  get oldWeight() { return this.#oldWeight; }
+  get newWeight() { return this.#newWeight; }
+  get decision() { return this.#decision; }
 
   /**
    * @param {{programExerciseId: number, oldWeight: number, newWeight: number, decision: string, date?: string}} data

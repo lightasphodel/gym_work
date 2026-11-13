@@ -244,7 +244,7 @@ CREATE TABLE workout_sets (
         REFERENCES program_exercises (id) ON DELETE RESTRICT,
     CONSTRAINT workout_sets_set_no_chk CHECK (set_no >= 1),
     CONSTRAINT workout_sets_weight_chk CHECK (weight >= 0),
-    CONSTRAINT workout_sets_reps_chk   CHECK (reps >= 0)
+    CONSTRAINT workout_sets_reps_chk   CHECK (reps BETWEEN 1 AND 50)
 );
 
 -- ---------------------------------------------------------------------

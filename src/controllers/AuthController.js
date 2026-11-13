@@ -3,8 +3,11 @@ import { config } from '../config/config.js';
 import { User, Role } from '../models/index.js';
 import { HttpError } from '../middleware/errorHandler.js';
 import { homePathFor } from '../middleware/auth.js';
+import { toPlain } from '../utils/toPlain.js';
 
 const INVALID_CREDENTIALS = 'Неверный логин или пароль';
+// Срок блокировки (lockedUntil) закрыт в модели User, поэтому сообщение без числа минут.
+const LOCKED_MESSAGE = 'Слишком много неудачных попыток входа. Вход временно заблокирован, повторите попытку позже';
 
 // Хеш-заглушка: при несуществующем логине пароль всё равно проверяется,
 // чтобы по времени ответа нельзя было определить, существует ли учётная запись.
@@ -12,11 +15,6 @@ let dummyHashPromise = null;
 function getDummyHash() {
   dummyHashPromise ??= bcrypt.hash('dummy-password-0', config.security.bcryptRounds);
   return dummyHashPromise;
-}
-
-function lockMessage(user) {
-  const minutes = Math.max(1, Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000));
-  return `Слишком много неудачных попыток входа. Повторите через ${minutes} мин.`;
 }
 
 function regenerateSession(req) {
@@ -45,7 +43,7 @@ export class AuthController {
         password,
         role: Role.USER, // через регистрацию создаются только пользователи
       });
-      res.status(201).json({ user });
+      res.status(201).json({ user: toPlain(user) });
     } catch (err) {
       if (err.code === '23505') {
         if (err.constraint === 'users_login_ak') {
@@ -72,14 +70,14 @@ export class AuthController {
 
     // Временная блокировка входа (ФТ-02): во время блокировки пароль не проверяется.
     if (user.isLocked()) {
-      throw new HttpError(429, lockMessage(user));
+      throw new HttpError(429, LOCKED_MESSAGE);
     }
 
     const ok = await user.checkPassword(password);
     if (!ok) {
       await user.registerFailedLogin();
       if (user.isLocked()) {
-        throw new HttpError(429, lockMessage(user));
+        throw new HttpError(429, LOCKED_MESSAGE);
       }
       throw new HttpError(401, INVALID_CREDENTIALS);
     }
@@ -94,7 +92,7 @@ export class AuthController {
     req.session.user = { id: user.id, login: user.login, role: user.role };
     await saveSession(req);
 
-    res.json({ user, redirect: homePathFor(user.role) });
+    res.json({ user: toPlain(user), redirect: homePathFor(user.role) });
   }
 
   /** POST /api/auth/logout */
@@ -106,6 +104,6 @@ export class AuthController {
 
   /** GET /api/auth/me */
   static me(req, res) {
-    res.json({ user: req.user });
+    res.json({ user: toPlain(req.user) });
   }
 }

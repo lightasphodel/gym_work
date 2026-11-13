@@ -26,16 +26,35 @@ async function saveSecondaryMuscles(client, exerciseId, muscleIds) {
  * Основная группа мышц — primaryMuscleId, вспомогательные хранятся в таблице exercise_muscles.
  */
 export class Exercise {
+  #id;
+  #name;
+  #primaryMuscleId;
+  #equipment;
+  #difficulty;
+  #technique;
+  #weightStep;
+  #isActive;
+
+  /** @param {object} row строка таблицы exercises */
   constructor(row) {
-    this.id = row.id;
-    this.name = row.name;
-    this.primaryMuscleId = row.primary_muscle_id;
-    this.equipment = row.equipment;
-    this.difficulty = row.difficulty;
-    this.technique = row.technique;
-    this.weightStep = row.weight_step;
-    this.isActive = row.is_active;
+    this.#id = row.id;
+    this.#name = row.name;
+    this.#primaryMuscleId = row.primary_muscle_id;
+    this.#equipment = row.equipment;
+    this.#difficulty = row.difficulty;
+    this.#technique = row.technique;
+    this.#weightStep = row.weight_step;
+    this.#isActive = row.is_active;
   }
+
+  get id() { return this.#id; }
+  get name() { return this.#name; }
+  get primaryMuscleId() { return this.#primaryMuscleId; }
+  get equipment() { return this.#equipment; }
+  get difficulty() { return this.#difficulty; }
+  get technique() { return this.#technique; }
+  get weightStep() { return this.#weightStep; }
+  get isActive() { return this.#isActive; }
 
   /**
    * Изменение упражнения. Если передан secondaryMuscleIds, список вспомогательных
@@ -48,23 +67,29 @@ export class Exercise {
     const set = buildSet(FIELDS, data, params);
     await withTransaction(async (client) => {
       if (set) {
-        params.push(this.id);
+        params.push(this.#id);
         const { rows } = await client.query(
           `UPDATE exercises SET ${set} WHERE id = $${params.length} RETURNING *`,
           params,
         );
-        Object.assign(this, new Exercise(rows[0]));
+        const r = rows[0];
+        this.#name = r.name;
+        this.#primaryMuscleId = r.primary_muscle_id;
+        this.#equipment = r.equipment;
+        this.#difficulty = r.difficulty;
+        this.#technique = r.technique;
+        this.#weightStep = r.weight_step;
       }
       if (Array.isArray(data.secondaryMuscleIds)) {
-        await saveSecondaryMuscles(client, this.id, data.secondaryMuscleIds);
+        await saveSecondaryMuscles(client, this.#id, data.secondaryMuscleIds);
       }
     });
   }
 
   /** Деактивация: упражнение не удаляется физически, чтобы сохранить историю тренировок. */
   async deactivate() {
-    await query('UPDATE exercises SET is_active = FALSE WHERE id = $1', [this.id]);
-    this.isActive = false;
+    await query('UPDATE exercises SET is_active = FALSE WHERE id = $1', [this.#id]);
+    this.#isActive = false;
   }
 
   /**
@@ -99,7 +124,7 @@ export class Exercise {
    * @param {{
    *   muscleId?: number,            // основная или вспомогательная группа мышц
    *   equipment?: string|string[],  // требуемый инвентарь (один или любой из списка)
-   *   difficulty?: number,          // уровень сложности
+   *   difficulty?: number,          // максимальный уровень сложности (включительно)
    *   includeInactive?: boolean     // по умолчанию только активные
    * }} [filter]
    * @returns {Promise<Exercise[]>}
@@ -125,8 +150,9 @@ export class Exercise {
       where.push(`e.equipment = $${params.length}`);
     }
     if (filter.difficulty !== undefined && filter.difficulty !== null) {
+      // Упражнения не сложнее заданного уровня (генератору нужны все доступные уровню).
       params.push(filter.difficulty);
-      where.push(`e.difficulty = $${params.length}`);
+      where.push(`e.difficulty <= $${params.length}`);
     }
 
     const sql = `SELECT e.* FROM exercises e

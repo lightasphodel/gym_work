@@ -15,18 +15,36 @@ async function refreshTonnage(client, workoutId) {
  * Подход тренировки (композиция с Workout, кратность 1..*).
  */
 export class WorkoutSet {
+  #id;
+  #workoutId;
+  #programExerciseId;
+  #setNo;
+  #weight;
+  #reps;
+
+  /** @param {object} row строка таблицы workout_sets */
   constructor(row) {
-    this.id = row.id;
-    this.workoutId = row.workout_id;
-    this.programExerciseId = row.program_exercise_id;
-    this.setNo = row.set_no;
-    this.weight = row.weight;
-    this.reps = row.reps;
+    this.#id = row.id;
+    this.#workoutId = row.workout_id;
+    this.#programExerciseId = row.program_exercise_id;
+    this.#setNo = row.set_no;
+    this.#weight = row.weight;
+    this.#reps = row.reps;
   }
 
-  /** Объём подхода: вес × повторения. */
+  get id() { return this.#id; }
+  get workoutId() { return this.#workoutId; }
+  get programExerciseId() { return this.#programExerciseId; }
+  get setNo() { return this.#setNo; }
+  get weight() { return this.#weight; }
+  get reps() { return this.#reps; }
+
+  /**
+   * Объём подхода: вес × повторения.
+   * @returns {number}
+   */
   volume() {
-    return this.weight * this.reps;
+    return this.#weight * this.#reps;
   }
 
   /**
@@ -39,12 +57,12 @@ export class WorkoutSet {
       await client.query('UPDATE workout_sets SET weight = $1, reps = $2 WHERE id = $3', [
         weight,
         reps,
-        this.id,
+        this.#id,
       ]);
-      await refreshTonnage(client, this.workoutId);
+      await refreshTonnage(client, this.#workoutId);
     });
-    this.weight = weight;
-    this.reps = reps;
+    this.#weight = weight;
+    this.#reps = reps;
   }
 
   /**
@@ -56,16 +74,29 @@ export class WorkoutSet {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
         'SELECT COUNT(*) AS n FROM workout_sets WHERE workout_id = $1',
-        [this.workoutId],
+        [this.#workoutId],
       );
       if (rows[0].n <= 1) {
         const err = new Error('Это единственный подход тренировки — удалите тренировку целиком');
         err.status = 409;
         throw err;
       }
-      await client.query('DELETE FROM workout_sets WHERE id = $1', [this.id]);
-      await refreshTonnage(client, this.workoutId);
+      await client.query('DELETE FROM workout_sets WHERE id = $1', [this.#id]);
+      await refreshTonnage(client, this.#workoutId);
     });
+  }
+
+  /**
+   * Подходы тренировки в порядке внесения.
+   * @param {number} workoutId
+   * @returns {Promise<WorkoutSet[]>}
+   */
+  static async findByWorkout(workoutId) {
+    const { rows } = await query(
+      'SELECT * FROM workout_sets WHERE workout_id = $1 ORDER BY id',
+      [workoutId],
+    );
+    return rows.map((r) => new WorkoutSet(r));
   }
 
   /**
