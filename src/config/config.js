@@ -72,5 +72,6 @@ export const config = Object.freeze({
     views: path.join(rootDir, 'src', 'views'),
     public: path.join(rootDir, 'public'),
     schema: path.join(rootDir, 'db', 'schema.sql'),
+    seed: path.join(rootDir, 'db', 'seed.sql'),
   }),
 });

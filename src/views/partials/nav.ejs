@@ -1,0 +1,30 @@
+<%#
+  Главное меню. Пункты зависят от роли из сессии (currentUser);
+  активный пункт отмечается aria-current="page" по адресу страницы (currentPath).
+  Остальные страницы из CLAUDE.md добавляются в меню по мере их появления (этап 11).
+-%>
+<%
+  const user = locals.currentUser ?? null;
+  const menus = {
+    GUEST: [
+      { href: '/login', text: 'Вход' },
+      { href: '/register', text: 'Регистрация' },
+    ],
+    USER: [
+      { href: '/home', text: 'Главная' },
+    ],
+    ADMIN: [
+      { href: '/admin', text: 'Панель администратора' },
+    ],
+  };
+  const items = (user && menus[user.role]) || menus.GUEST;
+-%>
+      <nav class="nav" id="site-nav" aria-label="Основная навигация">
+<% for (const item of items) { -%>
+        <a class="nav__link" href="<%= item.href %>"<%- item.href === locals.currentPath ? ' aria-current="page"' : '' %>><%= item.text %></a>
+<% } -%>
+<% if (user) { -%>
+        <span class="nav__user"><%= user.login %></span>
+        <button type="button" class="nav__link" id="logout-button">Выйти</button>
+<% } -%>
+      </nav>

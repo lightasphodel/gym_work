@@ -1,6 +1,3 @@
-import path from 'node:path';
-import { config } from '../config/config.js';
-
 /** Ошибка с HTTP-статусом и сообщением для пользователя. */
 export class HttpError extends Error {
   constructor(status, message) {
@@ -18,7 +15,7 @@ export function notFound(req, res) {
   if (isApiRequest(req)) {
     return res.status(404).json({ error: 'Ресурс не найден' });
   }
-  res.status(404).sendFile(path.join(config.paths.views, '404.html'));
+  res.status(404).render('404', { title: 'Страница не найдена', pageClass: 'page--glow' });
 }
 
 /** Централизованная обработка ошибок. Внутренние подробности клиенту не передаются. */

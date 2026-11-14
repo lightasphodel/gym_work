@@ -1,5 +1,3 @@
-import path from 'node:path';
-import { config } from '../config/config.js';
 import { User, Role } from '../models/index.js';
 import { isApiRequest } from './errorHandler.js';
 
@@ -19,7 +17,7 @@ function deny(req, res, status, message) {
   if (status === 401) {
     return res.redirect('/login');
   }
-  return res.status(403).sendFile(path.join(config.paths.views, '403.html'));
+  return res.status(403).render('403', { title: 'Доступ запрещён', pageClass: 'page--glow' });
 }
 
 /**

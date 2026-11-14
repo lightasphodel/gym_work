@@ -129,10 +129,10 @@
 4. ✅ **Закрыт на этапе 0.2** (+ `ExerciseMedia.findById`, `Program.create` с вложенными днями/упражнениями в одной транзакции). Было: модели: добавить `Program.findById`, `Program.findTemplates`, `WorkoutSet.findByWorkout`; переписать `Workout.calcTonnage()` без параметра через Σ `WorkoutSet.volume()`, `create()` считает тоннаж из созданных `WorkoutSet` внутри транзакции.
 5. Перейти на `export default class` во всех 20 классах (обновить импорты/бочки).
 6. `src/db/mapRow.js` и использовать его в моделях.
-7. EJS: пакет `ejs`, `app.set('view engine')`, `views/layouts`, `views/partials`, перевод 6 HTML-страниц; `PageController` разнести по контроллерам из CLAUDE.md.
+7. ✅ **Закрыт на этапе 0.3:** `src/config/views.js` (view engine ejs, обёртка-макет `layouts/main.ejs`), `partials/header|nav|footer|account`, 6 страниц в EJS, меню по роли из сессии; `PageController` удалён → `AuthController.root/loginPage/registerPage`, `ProfileController.home`, `AdminController.index`. Было: EJS: пакет `ejs`, `app.set('view engine')`, `views/layouts`, `views/partials`, перевод 6 HTML-страниц; `PageController` разнести по контроллерам из CLAUDE.md.
 8. ✅ **Закрыт на этапе 0.2:** `tests/StrengthMetrics.test.js`, `tests/toPlain.test.js`, `tests/models.test.js`; скрипт — `node --test "tests/**/*.test.js"` (Node 22+ не принимает каталог). Было: `npm test` (`node --test tests/`), каталог `tests/`, первые тесты `StrengthMetrics`.
-9. `db/seed.sql`.
-10. `multer` + `src/middleware/upload.js` (нужно к этапу 8); ~~`ExerciseMedia.findById`~~ ✅ 0.2.
+9. ✅ **Закрыт на этапе 0.3:** `db/seed.sql` + `npm run db:seed` (идемпотентный): 12 групп мышц, 4 пары антагонистов, 29 упражнений, `exercise_muscles`, admin / admin123, шаблон «Full Body для начинающих». Было: `db/seed.sql`.
+10. ✅ **Закрыт на этапе 0.3:** `uploadMedia(field)` — memoryStorage, 10 МБ, jpg/png/webp/mp4 по MIME, расширению и сигнатуре файла, `file.mediaType`. Было: `multer` + `src/middleware/upload.js` (нужно к этапу 8); ~~`ExerciseMedia.findById`~~ ✅ 0.2.
 11. Перенести `src/app.js` → `app.js` (или исправить структуру в CLAUDE.md).
 
 **P2 — этапы 5–7**

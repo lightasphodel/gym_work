@@ -33,6 +33,32 @@ function saveSession(req) {
  * Регистрация, вход, выход и данные текущего пользователя (ФТ-01, ФТ-02).
  */
 export class AuthController {
+  /** GET / — перенаправление на стартовую страницу роли или на вход. */
+  static root(req, res) {
+    const sessionUser = req.session?.user;
+    res.redirect(sessionUser ? homePathFor(sessionUser.role) : '/login');
+  }
+
+  /** GET /login — страница входа. */
+  static loginPage(req, res) {
+    res.render('login', {
+      title: 'Вход',
+      pageClass: 'page--hero page--glow',
+      containerClass: 'auth',
+      scripts: ['/js/login.js'],
+    });
+  }
+
+  /** GET /register — страница регистрации. */
+  static registerPage(req, res) {
+    res.render('register', {
+      title: 'Регистрация',
+      pageClass: 'page--hero page--glow',
+      containerClass: 'auth',
+      scripts: ['/js/register.js'],
+    });
+  }
+
   /** POST /api/auth/register */
   static async register(req, res) {
     const { login, email, password } = req.body;

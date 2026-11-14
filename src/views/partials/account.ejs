@@ -1,0 +1,9 @@
+        <section class="card" aria-labelledby="account-title">
+          <h2 id="account-title">Учётная запись</h2>
+          <dl class="details">
+            <dt>Логин</dt><dd><%= user.login %></dd>
+            <dt>Электронная почта</dt><dd><%= user.email %></dd>
+            <dt>Роль</dt><dd><%= roleNames[user.role] ?? user.role %></dd>
+            <dt>Дата регистрации</dt><dd><%= formatDate(user.createdAt) %></dd>
+          </dl>
+        </section>

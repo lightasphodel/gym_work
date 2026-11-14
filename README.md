@@ -29,12 +29,13 @@ fitness-app/
     ├── app.js                 серверный модуль Express
     ├── config/
     │   ├── config.js          параметры из .env
+    │   ├── views.js           шаблонизатор EJS, общий макет страниц
     │   └── db.js              пул подключений PostgreSQL, транзакции
     ├── models/                Model — пакет models диаграммы классов
-    ├── views/                 View — HTML-страницы
-    ├── controllers/           Controller — AuthController, PageController
+    ├── views/                 View — EJS: layouts/main.ejs, partials/ (шапка, меню по роли, футер), страницы
+    ├── controllers/           Controller — AuthController, ProfileController, AdminController
     ├── services/              пакет services диаграммы классов (бизнес-логика)
-    ├── middleware/            проверка сессии и роли, валидация, ошибки
+    ├── middleware/            проверка сессии и роли, валидация, загрузка файлов (multer), ошибки
     └── routes/                маршруты REST API и страниц
 ```
 
@@ -53,12 +54,12 @@ fitness-app/
    copy .env.example .env
    ```
 4. Откройте `.env` и укажите `DB_PASSWORD`, `SESSION_SECRET` (случайная строка), `ADMIN_LOGIN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
-5. Создайте схему БД и администратора:
+5. Создайте схему БД и загрузите начальные данные (группы мышц, 29 упражнений, шаблонная программа, администратор `admin` / `admin123`):
    ```
    npm run db:init
-   npm run admin:create
+   npm run db:seed
    ```
-   После создания администратора удалите `ADMIN_PASSWORD` из `.env`.
+   Своего администратора можно создать командой `npm run admin:create` (параметры `ADMIN_*` из `.env`); после этого удалите `ADMIN_PASSWORD` из `.env`.
 6. Запустите сервер: `npm start` (или `npm run dev` — с перезапуском при изменении файлов).
 7. Откройте в браузере `http://localhost:3000`.
 

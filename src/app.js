@@ -2,7 +2,7 @@
  * Серверный модуль приложения (Express).
  * Архитектура MVC:
  *   models/      – модель данных и доступ к БД
- *   views/       – HTML-страницы (+ public/: единая таблица стилей и клиентские модули)
+ *   views/       – EJS-представления: макет, фрагменты, страницы (+ public/: единая таблица стилей и клиентские модули)
  *   controllers/ – обработка запросов, обращение к сервисам и моделям
  *   services/    – бизнес-логика
  */
@@ -14,6 +14,7 @@ import express from 'express';
 import session from 'express-session';
 import { config } from './config/config.js';
 import { checkConnection, closePool } from './config/db.js';
+import { setupViews, viewLocals } from './config/views.js';
 import { router } from './routes/index.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -23,6 +24,7 @@ const useHttps = Boolean(config.server.tlsKeyPath && config.server.tlsCertPath);
 export const app = express();
 
 app.disable('x-powered-by');
+setupViews(app);
 app.use(securityHeaders({ https: useHttps }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
@@ -43,6 +45,7 @@ app.use(
 );
 
 app.use(express.static(config.paths.public, { index: false }));
+app.use(viewLocals);
 app.use(router);
 app.use(notFound);
 app.use(errorHandler);

@@ -1,12 +1,15 @@
 import { Router } from 'express';
-import { PageController } from '../controllers/PageController.js';
+import { AuthController } from '../controllers/AuthController.js';
+import { ProfileController } from '../controllers/ProfileController.js';
+import { AdminController } from '../controllers/AdminController.js';
 import { requireGuest, requireRole } from '../middleware/auth.js';
 import { Role } from '../models/index.js';
 
+/** Страницы (EJS). Доступ проверяется промежуточным ПО до рендеринга. */
 export const pageRoutes = Router();
 
-pageRoutes.get('/', PageController.root);
-pageRoutes.get('/login', requireGuest, PageController.login);
-pageRoutes.get('/register', requireGuest, PageController.register);
-pageRoutes.get('/home', requireRole(Role.USER), PageController.home);
-pageRoutes.get('/admin', requireRole(Role.ADMIN), PageController.admin);
+pageRoutes.get('/', AuthController.root);
+pageRoutes.get('/login', requireGuest, AuthController.loginPage);
+pageRoutes.get('/register', requireGuest, AuthController.registerPage);
+pageRoutes.get('/home', requireRole(Role.USER), ProfileController.home);
+pageRoutes.get('/admin', requireRole(Role.ADMIN), AdminController.index);

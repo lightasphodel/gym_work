@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — Тренировочный дневник</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<%- include('../partials/header') %>
+
+  <main class="page<%= locals.pageClass ? ' ' + pageClass : '' %>">
+    <div class="container<%= locals.containerClass ? ' ' + containerClass : '' %>">
+<%- body %>
+    </div>
+  </main>
+
+<%- include('../partials/footer') %>
+  <script type="module" src="/js/nav.js"></script>
+<% if (locals.currentUser) { -%>
+  <script type="module" src="/js/session.js"></script>
+<% } -%>
+<% for (const src of locals.scripts ?? []) { -%>
+  <script type="module" src="<%= src %>"></script>
+<% } -%>
+</body>
+</html>
