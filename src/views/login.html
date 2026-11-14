@@ -7,33 +7,50 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <main class="auth">
-    <section class="auth__intro">
-      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>Тренировочный дневник</a>
-      <h1 class="auth__title">Рабочий вес по результатам, а не наугад</h1>
-      <p class="auth__lead">Программа под вашу цель и уровень подготовки. После каждой тренировки приложение пересчитывает веса на следующую.</p>
-    </section>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/">Тренировочный дневник</a>
+      <button type="button" class="burger" aria-expanded="false" aria-controls="site-nav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
+      <nav class="nav" id="site-nav" aria-label="Основная навигация">
+        <a class="nav__link" href="/login" aria-current="page">Вход</a>
+        <a class="nav__link" href="/register">Регистрация</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="auth__form-area">
-      <form id="login-form" novalidate>
-        <h2>Вход</h2>
-        <div class="alert alert--success" id="form-success" role="status" hidden></div>
-        <div class="alert alert--error" id="form-error" role="alert" hidden></div>
+  <main class="page page--hero page--glow">
+    <div class="container auth">
+      <section class="hero">
+        <h1 class="hero__title">Рабочий вес по результатам, а не наугад</h1>
+        <p class="hero__lead">Программа под вашу цель и уровень подготовки. После каждой тренировки приложение пересчитывает веса на следующую.</p>
+      </section>
 
-        <div class="field">
-          <label for="login">Логин</label>
-          <input type="text" id="login" name="login" autocomplete="username" required>
-        </div>
-        <div class="field">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" autocomplete="current-password" required>
-        </div>
+      <section class="card form-card" aria-labelledby="login-title">
+        <form id="login-form" class="form" novalidate>
+          <h2 class="form__title" id="login-title">Вход</h2>
+          <div class="alert alert--success" id="form-success" role="status" hidden></div>
+          <div class="alert alert--error" id="form-error" role="alert" hidden></div>
 
-        <button type="submit" class="button button--primary button--wide">Войти</button>
-        <p class="form-footer">Нет учётной записи? <a href="/register">Зарегистрироваться</a></p>
-      </form>
-    </section>
+          <div class="field">
+            <label for="login">Логин</label>
+            <input type="text" id="login" name="login" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required>
+          </div>
+
+          <button type="submit" class="button button--primary">Войти</button>
+          <p class="form-footer">Нет учётной записи? <a href="/register">Зарегистрироваться</a></p>
+        </form>
+      </section>
+    </div>
   </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Тренировочный дневник. Курсовой проект. Не заменяет консультацию тренера и врача.</p>
+  </footer>
+  <script type="module" src="/js/nav.js"></script>
   <script type="module" src="/js/login.js"></script>
 </body>
 </html>

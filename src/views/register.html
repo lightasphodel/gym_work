@@ -7,44 +7,61 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <main class="auth">
-    <section class="auth__intro">
-      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>Тренировочный дневник</a>
-      <h1 class="auth__title">Начните вести тренировки</h1>
-      <p class="auth__lead">После регистрации заполните профиль: цель, уровень подготовки и число тренировок в неделю.</p>
-    </section>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/">Тренировочный дневник</a>
+      <button type="button" class="burger" aria-expanded="false" aria-controls="site-nav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
+      <nav class="nav" id="site-nav" aria-label="Основная навигация">
+        <a class="nav__link" href="/login">Вход</a>
+        <a class="nav__link" href="/register" aria-current="page">Регистрация</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="auth__form-area">
-      <form id="register-form" novalidate>
-        <h2>Регистрация</h2>
-        <div class="alert alert--error" id="form-error" role="alert" hidden></div>
+  <main class="page page--hero page--glow">
+    <div class="container auth">
+      <section class="hero">
+        <h1 class="hero__title">Начните вести тренировки</h1>
+        <p class="hero__lead">После регистрации заполните профиль: цель, уровень подготовки и число тренировок в неделю.</p>
+      </section>
 
-        <div class="field">
-          <label for="login">Логин</label>
-          <input type="text" id="login" name="login" autocomplete="username" required
-                 minlength="3" maxlength="50" aria-describedby="login-hint">
-          <span class="field__hint" id="login-hint">От 3 до 50 символов: латинские буквы, цифры, «_», «.», «-»</span>
-        </div>
-        <div class="field">
-          <label for="email">Электронная почта</label>
-          <input type="email" id="email" name="email" autocomplete="email" required maxlength="100">
-        </div>
-        <div class="field">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" autocomplete="new-password" required
-                 minlength="8" aria-describedby="password-hint">
-          <span class="field__hint" id="password-hint">Не менее 8 символов, хотя бы одна буква и одна цифра</span>
-        </div>
-        <div class="field">
-          <label for="password-confirm">Повторите пароль</label>
-          <input type="password" id="password-confirm" name="passwordConfirm" autocomplete="new-password" required>
-        </div>
+      <section class="card form-card" aria-labelledby="register-title">
+        <form id="register-form" class="form" novalidate>
+          <h2 class="form__title" id="register-title">Регистрация</h2>
+          <div class="alert alert--error" id="form-error" role="alert" hidden></div>
 
-        <button type="submit" class="button button--primary button--wide">Зарегистрироваться</button>
-        <p class="form-footer">Уже зарегистрированы? <a href="/login">Войти</a></p>
-      </form>
-    </section>
+          <div class="field">
+            <label for="login">Логин</label>
+            <input type="text" id="login" name="login" autocomplete="username" required
+                   minlength="3" maxlength="50" aria-describedby="login-hint">
+            <span class="field__hint" id="login-hint">От 3 до 50 символов: латинские буквы, цифры, «_», «.», «-»</span>
+          </div>
+          <div class="field">
+            <label for="email">Электронная почта</label>
+            <input type="email" id="email" name="email" autocomplete="email" required maxlength="100">
+          </div>
+          <div class="field">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required
+                   minlength="8" aria-describedby="password-hint">
+            <span class="field__hint" id="password-hint">Не менее 8 символов, хотя бы одна буква и одна цифра</span>
+          </div>
+          <div class="field">
+            <label for="password-confirm">Повторите пароль</label>
+            <input type="password" id="password-confirm" name="passwordConfirm" autocomplete="new-password" required>
+          </div>
+
+          <button type="submit" class="button button--primary">Зарегистрироваться</button>
+          <p class="form-footer">Уже зарегистрированы? <a href="/login">Войти</a></p>
+        </form>
+      </section>
+    </div>
   </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Тренировочный дневник. Курсовой проект. Не заменяет консультацию тренера и врача.</p>
+  </footer>
+  <script type="module" src="/js/nav.js"></script>
   <script type="module" src="/js/register.js"></script>
 </body>
 </html>
