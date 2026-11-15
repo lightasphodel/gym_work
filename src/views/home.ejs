@@ -1,5 +1,21 @@
       <h1 class="page__title">Главная</h1>
       <div class="page__content">
-        <div class="alert alert--error" id="page-error" role="alert" hidden></div>
+        <div class="grid-3">
+          <section class="card" aria-labelledby="profile-card-title">
+            <h2 id="profile-card-title">Тренировочный профиль</h2>
+<% if (profileComplete) { -%>
+            <p>Профиль заполнен: цель, уровень, инвентарь и масса тела учитываются при составлении программы.</p>
+            <a class="button button--ghost" href="/profile">Изменить профиль</a>
+<% } else { -%>
+            <p>Заполните анкету — без неё программу тренировок не составить.</p>
+            <a class="button button--primary" href="/profile">Заполнить профиль</a>
+<% } -%>
+          </section>
+          <section class="card" aria-labelledby="exercises-card-title">
+            <h2 id="exercises-card-title">Справочник упражнений</h2>
+            <p>Техника выполнения, целевые группы мышц и необходимый инвентарь.</p>
+            <a class="button button--ghost" href="/exercises">Открыть справочник</a>
+          </section>
+        </div>
 <%- include('partials/account') %>
       </div>

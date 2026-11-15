@@ -136,9 +136,9 @@
 11. Перенести `src/app.js` → `app.js` (или исправить структуру в CLAUDE.md).
 
 **P2 — этапы 5–7**
-12. ProfileController + `/profile` (`TrainingProfile.create/update`; ~~`isComplete()` — добавить проверку `bodyWeight`~~ ✅ 0.2).
-13. ExerciseController (чтение) + `/exercises`, `/exercises/:id`, `MuscleGroup.findAll()`.
-14. AdminController + `/admin/users`, `block()/unblock()`.
+12. ✅ **Закрыт на этапах 5–7:** `ProfileController.profilePage/save`, `/profile` (GET/POST, PRG), первый раз `TrainingProfile.create`, затем `update`; серверная проверка `parseProfile` (validate.js). Было: ProfileController + `/profile` (`TrainingProfile.create/update`; ~~`isComplete()` — добавить проверку `bodyWeight`~~ ✅ 0.2).
+13. ✅ **Закрыт на этапах 5–7:** `ExerciseController.list/show/media`, `/exercises` (фильтр по группе мышц, инвентарю, сложности через `Exercise.search`), `/exercises/:id`, `/media/:id` (`ExerciseMedia.findById`). Было: ExerciseController (чтение) + `/exercises`, `/exercises/:id`, `MuscleGroup.findAll()`.
+14. ✅ **Закрыт на этапах 5–7:** `AdminController.users/block/unblock`, `/admin/users`, POST `/admin/users/:id/block|unblock`; свою запись заблокировать нельзя (400). Было: AdminController + `/admin/users`, `block()/unblock()`.
 
 **P3 — записать сейчас, исправлять на своих этапах**
 15. Этап 8: `#loadTable` привести к табл. 1.1 PLAN (+ подходы по уровню); ~~`Exercise.search` — `difficulty <=`~~ ✅ 0.2; зависимость ProgramGenerator → ExerciseSelector; typedef `Split`.

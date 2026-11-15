@@ -37,5 +37,8 @@ export function errorHandler(err, req, res, next) {
   if (isApiRequest(req)) {
     return res.status(status).json({ error: message });
   }
+  if (status === 404) {
+    return notFound(req, res);
+  }
   res.status(status).type('text/plain; charset=utf-8').send(message);
 }

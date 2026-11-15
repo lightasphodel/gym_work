@@ -1,0 +1,60 @@
+<%#
+  Карточка упражнения: параметры, техника выполнения, медиафайлы (/media/:id).
+-%>
+      <h1 class="page__title"><%= exercise.name %></h1>
+      <div class="page__content">
+        <section class="card" aria-labelledby="exercise-params-title">
+          <h2 id="exercise-params-title">Параметры</h2>
+          <dl class="details">
+            <dt>Основная группа мышц</dt><dd><%= muscleName %></dd>
+            <dt>Инвентарь</dt><dd><%= exercise.equipment %></dd>
+            <dt>Сложность</dt><dd><%= difficultyNames[exercise.difficulty] ?? exercise.difficulty %></dd>
+            <dt>Шаг изменения веса</dt><dd><%= Number(exercise.weightStep) > 0 ? String(exercise.weightStep).replace('.', ',') + ' кг' : 'вес не меняется, растёт число повторений' %></dd>
+          </dl>
+        </section>
+
+        <section class="card" aria-labelledby="exercise-technique-title">
+          <h2 id="exercise-technique-title">Техника выполнения</h2>
+<% if (technique.length) { -%>
+          <div>
+<% for (const p of technique) { -%>
+            <p><%= p %></p>
+<% } -%>
+          </div>
+<% } else { -%>
+          <p class="text-muted">Описание техники ещё не добавлено.</p>
+<% } -%>
+        </section>
+
+        <section class="card" aria-labelledby="exercise-media-title">
+          <h2 id="exercise-media-title">Фото и видео</h2>
+<% if (media.length) { -%>
+          <div class="gallery">
+<% media.forEach((m, i) => { -%>
+            <button type="button" class="gallery__item" data-src="/media/<%= m.id %>" data-type="<%= m.mediaType %>"
+                    aria-label="Открыть: <%= exercise.name %>, файл <%= i + 1 %>">
+<% if (m.mediaType === 'video') { -%>
+              <video src="/media/<%= m.id %>" preload="metadata" muted></video>
+<% } else { -%>
+              <img src="/media/<%= m.id %>" alt="<%= exercise.name %>, иллюстрация <%= i + 1 %>" loading="lazy">
+<% } -%>
+              <span class="gallery__caption"><%= m.mediaType === 'video' ? 'Видео' : 'Фото' %> <%= i + 1 %></span>
+            </button>
+<% }) -%>
+          </div>
+          <dialog class="viewer" id="media-viewer" aria-label="Просмотр медиафайла">
+            <div id="media-viewer-body"></div>
+            <p class="viewer__caption" id="media-viewer-caption"></p>
+            <form method="dialog">
+              <button type="submit" class="button button--ghost">Закрыть</button>
+            </form>
+          </dialog>
+<% } else { -%>
+          <p class="text-muted">Медиафайлы ещё не добавлены.</p>
+<% } -%>
+        </section>
+
+        <div class="button-row">
+          <a class="button button--ghost" href="/exercises">К справочнику</a>
+        </div>
+      </div>

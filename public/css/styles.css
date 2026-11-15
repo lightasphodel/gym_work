@@ -199,6 +199,11 @@ a:hover {
   margin-top: var(--h1-gap);
 }
 
+/* Блоки содержимого страницы (карточки, формы, таблицы) идут с отступом сетки */
+.page__content > * + * {
+  margin-top: var(--gap);
+}
+
 .caption {
   font-size: var(--fs-caption);
   color: var(--muted);

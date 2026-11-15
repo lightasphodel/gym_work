@@ -7,6 +7,7 @@ import path from 'node:path';
 import ejs from 'ejs';
 import { config } from './config.js';
 import { Role } from '../models/enums.js';
+import { EQUIPMENT, goalNames, levelNames, difficultyNames } from './dictionaries.js';
 
 const layoutPath = path.join(config.paths.views, 'layouts', 'main.ejs');
 
@@ -40,6 +41,10 @@ export function setupViews(app) {
   app.set('views', config.paths.views);
   app.locals.roleNames = roleNames;
   app.locals.formatDate = formatDate;
+  app.locals.equipmentList = EQUIPMENT;
+  app.locals.goalNames = goalNames;
+  app.locals.levelNames = levelNames;
+  app.locals.difficultyNames = difficultyNames;
 }
 
 /**

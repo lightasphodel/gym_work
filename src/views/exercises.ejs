@@ -1,0 +1,71 @@
+<%#
+  Справочник упражнений: фильтр (GET) и таблица результатов.
+  filter — применённый фильтр, muscles — группы мышц, muscleNames — id → название.
+-%>
+      <h1 class="page__title">Справочник упражнений</h1>
+      <p class="page__intro">Выберите группу мышц, инвентарь и сложность, чтобы найти упражнение и посмотреть технику выполнения.</p>
+      <div class="page__content">
+        <form class="card" method="get" action="/exercises" aria-label="Фильтр упражнений">
+          <div class="grid-3">
+            <div class="field">
+              <label for="filter-muscle">Группа мышц</label>
+              <select id="filter-muscle" name="muscle">
+                <option value="">Все группы</option>
+<% for (const m of muscles) { -%>
+                <option value="<%= m.id %>"<%- filter.muscleId === m.id ? ' selected' : '' %>><%= m.name %></option>
+<% } -%>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-equipment">Инвентарь</label>
+              <select id="filter-equipment" name="equipment">
+                <option value="">Любой</option>
+<% for (const item of equipmentList) { -%>
+                <option value="<%= item %>"<%- filter.equipment === item ? ' selected' : '' %>><%= item %></option>
+<% } -%>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-difficulty">Сложность не выше</label>
+              <select id="filter-difficulty" name="difficulty">
+                <option value="">Любая</option>
+<% for (const [value, name] of Object.entries(difficultyNames)) { -%>
+                <option value="<%= value %>"<%- filter.difficulty === Number(value) ? ' selected' : '' %>><%= name %></option>
+<% } -%>
+              </select>
+            </div>
+          </div>
+          <div class="button-row">
+            <button type="submit" class="button button--primary">Показать</button>
+            <a class="button button--ghost" href="/exercises">Сбросить</a>
+          </div>
+        </form>
+
+<% if (exercises.length === 0) { -%>
+        <p class="text-muted" role="status">Ничего не найдено. Измените условия фильтра.</p>
+<% } else { -%>
+        <p class="caption" role="status">Найдено упражнений: <%= exercises.length %></p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Упражнение</th>
+                <th scope="col">Группа мышц</th>
+                <th scope="col">Инвентарь</th>
+                <th scope="col">Сложность</th>
+              </tr>
+            </thead>
+            <tbody>
+<% for (const e of exercises) { -%>
+              <tr>
+                <td><a href="/exercises/<%= e.id %>"><%= e.name %></a></td>
+                <td><%= muscleNames[e.primaryMuscleId] ?? '' %></td>
+                <td><%= e.equipment %></td>
+                <td><%= difficultyNames[e.difficulty] ?? e.difficulty %></td>
+              </tr>
+<% } -%>
+            </tbody>
+          </table>
+        </div>
+<% } -%>
+      </div>

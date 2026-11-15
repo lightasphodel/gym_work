@@ -1,0 +1,62 @@
+<%#
+  Список учётных записей (ФТ-18). users — простые объекты (toPlain) + locked (isLocked()),
+  selfId — id текущего администратора: свою запись заблокировать нельзя.
+-%>
+      <h1 class="page__title">Пользователи</h1>
+      <p class="page__intro">Заблокированный пользователь не может войти, а его открытая сессия завершается при следующем запросе.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Логин</th>
+                <th scope="col">Электронная почта</th>
+                <th scope="col">Роль</th>
+                <th scope="col">Регистрация</th>
+                <th scope="col">Статус</th>
+                <th scope="col">Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+<% for (const u of users) { -%>
+              <tr>
+                <td><%= u.login %></td>
+                <td><%= u.email %></td>
+                <td><%= roleNames[u.role] ?? u.role %></td>
+                <td><%= formatDate(u.createdAt) %></td>
+                <td>
+<% if (u.isBlocked) { -%>
+                  <span class="chip chip--static chip--error">Заблокирован</span>
+<% } else if (u.locked) { -%>
+                  <span class="chip chip--static chip--error">Вход временно заблокирован</span>
+<% } else { -%>
+                  <span class="chip chip--static chip--success">Активен</span>
+<% } -%>
+                </td>
+                <td>
+<% if (u.id === selfId) { -%>
+                  <span class="text-muted">Это вы</span>
+<% } else { -%>
+                  <div class="button-row">
+<% if (u.isBlocked || u.locked) { -%>
+                    <form method="post" action="/admin/users/<%= u.id %>/unblock">
+                      <button type="submit" class="button button--ghost" aria-label="Разблокировать <%= u.login %>">Разблокировать</button>
+                    </form>
+<% } -%>
+<% if (!u.isBlocked) { -%>
+                    <form method="post" action="/admin/users/<%= u.id %>/block">
+                      <button type="submit" class="button button--ghost" aria-label="Заблокировать <%= u.login %>">Заблокировать</button>
+                    </form>
+<% } -%>
+                  </div>
+<% } -%>
+                </td>
+              </tr>
+<% } -%>
+            </tbody>
+          </table>
+        </div>
+      </div>

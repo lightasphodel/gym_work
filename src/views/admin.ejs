@@ -1,5 +1,16 @@
       <h1 class="page__title">Панель администратора</h1>
       <div class="page__content">
-        <div class="alert alert--error" id="page-error" role="alert" hidden></div>
+        <div class="grid-3">
+          <section class="card" aria-labelledby="users-card-title">
+            <h2 id="users-card-title">Пользователи</h2>
+            <p>Список учётных записей, блокировка и разблокировка.</p>
+            <a class="button button--primary" href="/admin/users">Открыть список</a>
+          </section>
+          <section class="card" aria-labelledby="exercises-card-title">
+            <h2 id="exercises-card-title">Справочник упражнений</h2>
+            <p>Просмотр упражнений в том виде, в каком их видят пользователи.</p>
+            <a class="button button--ghost" href="/exercises">Открыть справочник</a>
+          </section>
+        </div>
 <%- include('partials/account') %>
       </div>

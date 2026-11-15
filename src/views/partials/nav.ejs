@@ -12,16 +12,26 @@
     ],
     USER: [
       { href: '/home', text: 'Главная' },
+      { href: '/profile', text: 'Профиль' },
+      { href: '/exercises', text: 'Упражнения' },
     ],
     ADMIN: [
       { href: '/admin', text: 'Панель администратора' },
+      { href: '/admin/users', text: 'Пользователи' },
+      { href: '/exercises', text: 'Упражнения' },
     ],
   };
   const items = (user && menus[user.role]) || menus.GUEST;
+  // Активный пункт — самый длинный адрес, с которого начинается адрес страницы
+  // (/exercises/5 → «Упражнения», /admin/users → только «Пользователи»).
+  const path = locals.currentPath ?? '';
+  const current = items
+    .filter((item) => path === item.href || path.startsWith(item.href + '/'))
+    .reduce((best, item) => (!best || item.href.length > best.href.length ? item : best), null);
 -%>
       <nav class="nav" id="site-nav" aria-label="Основная навигация">
 <% for (const item of items) { -%>
-        <a class="nav__link" href="<%= item.href %>"<%- item.href === locals.currentPath ? ' aria-current="page"' : '' %>><%= item.text %></a>
+        <a class="nav__link" href="<%= item.href %>"<%- item === current ? ' aria-current="page"' : '' %>><%= item.text %></a>
 <% } -%>
 <% if (user) { -%>
         <span class="nav__user"><%= user.login %></span>
