@@ -16,3 +16,9 @@ apiRoutes.post('/workouts', requireRole(Role.USER), WorkoutController.save);
 
 // Калькулятор 1ПМ (ФТ-06)
 apiRoutes.get('/1rm', requireAuth, AnalyticsController.oneRm);
+
+// Статистика (ФТ-07, ФТ-08, ФТ-10, ФТ-11)
+apiRoutes.get('/stats/progress', requireRole(Role.USER), AnalyticsController.progress);
+apiRoutes.get('/stats/tonnage', requireRole(Role.USER), AnalyticsController.tonnage);
+apiRoutes.get('/stats/balance', requireRole(Role.USER), AnalyticsController.balance);
+apiRoutes.get('/stats/regularity', requireRole(Role.USER), AnalyticsController.regularity);

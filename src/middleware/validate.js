@@ -375,3 +375,41 @@ export function parseOneRm(q) {
   }
   return { data: { weight, reps }, errors };
 }
+
+// ---------- Этап 10: параметры статистики ----------
+
+/** Корректная календарная дата 'YYYY-MM-DD' или null. */
+export function parseDate(value) {
+  const s = text(value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s ? s : null;
+}
+
+/** Наибольшая длина периода графика прогресса, дней. */
+export const PROGRESS_MAX_DAYS = 731;
+
+/**
+ * Параметры GET /api/stats/progress: exerciseId обязателен; from и to — даты 'YYYY-MM-DD',
+ * по умолчанию последние 90 дней до today; from ≤ to, период не длиннее двух лет.
+ * @param {Record<string, unknown>} q
+ * @param {string} today текущая дата 'YYYY-MM-DD'
+ * @returns {{data: {exerciseId: number, from: string, to: string}, errors: string[]}}
+ */
+export function parseProgressQuery(q, today) {
+  const errors = [];
+  const exerciseId = intIn(q.exerciseId, 1, MAX_ID);
+  if (exerciseId === null) errors.push('Выберите упражнение');
+  const to = q.to === undefined || q.to === '' ? today : parseDate(q.to);
+  const day = 24 * 60 * 60 * 1000;
+  const defaultFrom = to ? new Date(Date.parse(`${to}T00:00:00Z`) - 89 * day).toISOString().slice(0, 10) : null;
+  const from = q.from === undefined || q.from === '' ? defaultFrom : parseDate(q.from);
+  if (!from || !to) {
+    errors.push('Даты периода — в формате ГГГГ-ММ-ДД');
+  } else if (from > to) {
+    errors.push('Начало периода позже его конца');
+  } else if ((Date.parse(to) - Date.parse(from)) / day > PROGRESS_MAX_DAYS) {
+    errors.push('Период — не длиннее двух лет');
+  }
+  return { data: { exerciseId, from, to }, errors };
+}
