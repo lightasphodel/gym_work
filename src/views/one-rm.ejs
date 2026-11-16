@@ -1,0 +1,39 @@
+<%#
+  Калькулятор одноповторного максимума (ФТ-06): формулы Эпли (1.1) и Бжицки (1.2).
+  Без JavaScript форма отправляется GET-запросом и результат считает сервер;
+  с JavaScript (/js/oneRm.js) — запрос GET /api/1rm без перезагрузки страницы.
+-%>
+<%
+  const invalid = (name) => (errors[name] ? ' aria-invalid="true"' : '');
+-%>
+      <h1 class="page__title">Калькулятор 1ПМ</h1>
+      <p class="page__intro">Оценка одноповторного максимума — наибольшего веса, который можно поднять один раз, — по весу и числу повторений в подходе.</p>
+      <div class="page__content">
+        <section class="card form-card" aria-labelledby="one-rm-title">
+          <form class="form" id="one-rm-form" method="get" action="/tools/1rm" novalidate>
+            <h2 class="form__title" id="one-rm-title">Подход</h2>
+            <div class="alert alert--error" id="one-rm-error" role="alert"<%- Object.keys(errors).length ? '' : ' hidden' %>><%= Object.values(errors)[0] ?? '' %></div>
+            <div class="field">
+              <label for="weight">Вес, кг</label>
+              <input type="number" id="weight" name="weight" min="0.5" max="999.99" step="0.01" inputmode="decimal" required
+                     value="<%= form.weight %>"<%- invalid('weight') %>>
+            </div>
+            <div class="field">
+              <label for="reps">Повторения</label>
+              <input type="number" id="reps" name="reps" min="1" max="36" step="1" inputmode="numeric" required
+                     value="<%= form.reps %>" aria-describedby="reps-hint"<%- invalid('reps') %>>
+              <span class="field__hint" id="reps-hint">От 1 до 36: формула Бжицки определена при числе повторений меньше 37</span>
+            </div>
+            <button type="submit" class="button button--primary">Рассчитать</button>
+          </form>
+        </section>
+
+        <section class="result" id="one-rm-result" aria-labelledby="one-rm-result-title" aria-live="polite"<%- result ? '' : ' hidden' %>>
+          <h2 class="result__title" id="one-rm-result-title">Оценка 1ПМ</h2>
+          <ul class="result__list">
+            <li>По формуле Эпли: <span class="result__score" id="one-rm-epley"><%= result ? formatNumber(result.epley) + ' кг' : '' %></span></li>
+            <li>По формуле Бжицки: <span class="result__score" id="one-rm-brzycki"><%= result ? formatNumber(result.brzycki) + ' кг' : '' %></span></li>
+          </ul>
+          <p class="result__text text-muted">При небольшом числе повторений оценки близки; чем больше повторений, тем ниже точность.</p>
+        </section>
+      </div>

@@ -890,7 +890,9 @@ input[type="radio"] {
 
 /* Кнопки под таблицей или сеткой внутри формы */
 .table-wrap + .button-row,
-.card > .button-row {
+.card > .button-row,
+.day-card > .button-row,
+.result > .button-row {
   margin-top: var(--gap);
 }
 

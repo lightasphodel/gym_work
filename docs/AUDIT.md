@@ -143,7 +143,7 @@
 **P3 — записать сейчас, исправлять на своих этапах**
 15. ✅ **Закрыт на этапе 8:** `#loadTable` = табл. 1.1 (отдых 90/90/180/60 с) + подходы по уровню 3/4/5; `ProgramGenerator` получает `ExerciseSelector` в конструкторе; typedef `Split`; `ExerciseSelector.filter/suggestReplacement` реализованы. Было: Этап 8: `#loadTable` привести к табл. 1.1 PLAN (+ подходы по уровню); ~~`Exercise.search` — `difficulty <=`~~ ✅ 0.2; зависимость ProgramGenerator → ExerciseSelector; typedef `Split`.
 16. ✅ **Закрыт на этапе 0.2** (решение — CLAUDE.md, «Тестирование приватных методов»: сценарно через публичный метод + `mock.method`). Было: этапы 8–9: PLAN требует тестов для приватных `#selectSplit`, `#calcStartWeight`, `#decide`, `#roundToEquipment` — напрямую из теста их не вызвать; нужно решение (тестировать через `generate()/adapt()` с моками или иначе).
-17. Этап 9: округление до 0,1 в `StrengthMetrics`; typedef `Result`; ~~CHECK `reps` согласовать с 1–50~~ ✅ 0.2 (`BETWEEN 1 AND 50`).
+17. ✅ **Закрыт на этапе 9:** `StrengthMetrics` округляет до 0,1; typedef `Result` в WeightAdaptationService; `WeightAdaptationService` и `RecordDetector` реализованы, зависимость → StrengthMetrics в конструкторе. Было: Этап 9: округление до 0,1 в `StrengthMetrics`; typedef `Result`; ~~CHECK `reps` согласовать с 1–50~~ ✅ 0.2 (`BETWEEN 1 AND 50`).
 18. Этап 10: typedef `Series/BalanceReport/Regularity`, полный JSDoc.
 19. Этап 12: helmet вместо `securityHeaders`, `sameSite: 'strict'`, connect-pg-simple + таблица `session`, bcrypt cost 10 vs 12, HTTPS 443/3443 + редирект HTTP→HTTPS, `npm run cert`.
 20. Рис. 1.7: дорисовать `users.locked_until`. README: раздел «Открытые вопросы» п. 4 устарел (методы уже на диаграмме).

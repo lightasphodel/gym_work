@@ -1,0 +1,91 @@
+<%#
+  Ввод результатов тренировки (ФТ-17). program — активная программа (или null),
+  days — её дни, day — выбранный день. Сохранение — клиентский модуль /js/WorkoutPage.js
+  (POST /api/workouts), результат: тоннаж, новые рекорды и рабочие веса с пояснением.
+-%>
+<% if (!program) { -%>
+      <h1 class="page__title">Тренировка</h1>
+      <div class="page__content">
+        <p class="page__intro">Чтобы вносить тренировки, активируйте программу: составьте её по профилю или скопируйте шаблон.</p>
+        <a class="button button--primary" href="/programs">Перейти к программе</a>
+      </div>
+<% } else if (!day) { -%>
+      <h1 class="page__title">Тренировка</h1>
+      <p class="page__intro">Выберите тренировочный день программы «<%= program.title %>».</p>
+      <div class="page__content">
+        <div class="grid-3">
+<% for (const d of days) { -%>
+          <article class="day-card">
+            <h2 class="day-card__title">День <%= d.dayNumber %>. <%= d.title %></h2>
+            <ol class="result__list">
+<% for (const ex of d.exercises) { -%>
+              <li><%= ex.name %> — <%= ex.sets %> × <%= ex.repsMin %>–<%= ex.repsMax %></li>
+<% } -%>
+            </ol>
+            <div class="button-row">
+              <a class="button button--primary" href="/workouts/new?day=<%= d.id %>">Начать</a>
+            </div>
+          </article>
+<% } -%>
+        </div>
+      </div>
+<% } else { -%>
+      <h1 class="page__title">День <%= day.dayNumber %>. <%= day.title %></h1>
+      <p class="page__intro">Внесите фактический вес и число повторений засчитанных подходов. Подход, выполненный с нарушением техники, не вносите — оставьте поле повторений пустым. Рабочий вес пересчитывается только для упражнений, где внесены все подходы.</p>
+      <div class="page__content">
+        <form id="workout-form" data-day-id="<%= day.id %>" novalidate>
+          <div class="alert alert--error" id="workout-error" role="alert" hidden></div>
+<% for (const ex of day.exercises) { -%>
+          <section class="card" aria-labelledby="ex-title-<%= ex.id %>">
+            <h2 id="ex-title-<%= ex.id %>"><%= ex.name %></h2>
+            <p class="caption">План: <%= ex.sets %> × <%= ex.repsMin %>–<%= ex.repsMax %> повт.<% if (Number(ex.workingWeight) > 0) { %>, рабочий вес <span class="num-accent"><%= formatNumber(ex.workingWeight) %> кг</span><% } %>, отдых <%= ex.restSec %> с</p>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Подход</th>
+                    <th scope="col">Вес, кг</th>
+                    <th scope="col">Повторения</th>
+                  </tr>
+                </thead>
+                <tbody>
+<% for (let n = 1; n <= ex.sets; n += 1) { const key = `${ex.id}-${n}`; -%>
+                  <tr data-set data-pe="<%= ex.id %>" data-set-no="<%= n %>">
+                    <td><%= n %></td>
+                    <td>
+                      <label class="visually-hidden" for="w-<%= key %>"><%= ex.name %>, подход <%= n %>: вес</label>
+                      <input type="number" id="w-<%= key %>" name="weight" min="0" max="999.99" step="0.01"
+                             inputmode="decimal" value="<%= Number(ex.workingWeight) %>">
+                    </td>
+                    <td>
+                      <label class="visually-hidden" for="r-<%= key %>"><%= ex.name %>, подход <%= n %>: повторения</label>
+                      <input type="number" id="r-<%= key %>" name="reps" min="1" max="50" step="1"
+                             inputmode="numeric" placeholder="<%= ex.repsMin %>–<%= ex.repsMax %>">
+                    </td>
+                  </tr>
+<% } -%>
+                </tbody>
+              </table>
+            </div>
+          </section>
+<% } -%>
+          <div class="button-row">
+            <button type="submit" class="button button--primary">Сохранить тренировку</button>
+            <a class="button button--ghost" href="/workouts/new">Другой день</a>
+          </div>
+        </form>
+
+        <section class="result" id="workout-result" aria-labelledby="workout-result-title" tabindex="-1" hidden>
+          <h2 class="result__title" id="workout-result-title">Тренировка сохранена</h2>
+          <p class="result__text">Тоннаж: <span class="result__score" id="result-tonnage"></span></p>
+          <p class="result__text" id="result-incomplete" hidden>Внесены не все запланированные подходы — тренировка отмечена как незавершённая.</p>
+          <h3 class="result__text">Новые рабочие веса</h3>
+          <ul class="result__list" id="result-adaptations"></ul>
+          <h3 class="result__text" id="result-records-title" hidden>Новые личные рекорды</h3>
+          <ul class="result__list" id="result-records"></ul>
+          <div class="button-row">
+            <a class="button button--primary" href="/programs">К программе</a>
+          </div>
+        </section>
+      </div>
+<% } -%>

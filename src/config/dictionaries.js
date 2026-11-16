@@ -3,7 +3,7 @@
  * значений перечислений. Это не перечисления модели (они — в src/models/enums.js),
  * а подписи для страниц и список для проверки ввода.
  */
-import { Goal, Level } from '../models/enums.js';
+import { Goal, Level, RecordType, Decision } from '../models/enums.js';
 
 /** Виды инвентаря (exercises.equipment, training_profiles.equipment), как в db/seed.sql. */
 export const EQUIPMENT = Object.freeze(['штанга', 'гантели', 'тренажёр', 'собственный вес']);
@@ -35,3 +35,18 @@ export const WORKOUTS_PER_WEEK = Object.freeze({ min: 2, max: 6 });
 
 /** Допустимая масса тела в анкете профиля, кг. */
 export const BODY_WEIGHT = Object.freeze({ min: 30, max: 300 });
+
+/** Названия типов личных рекордов. */
+export const recordTypeNames = Object.freeze({
+  [RecordType.MAX_WEIGHT]: 'Максимальный вес',
+  [RecordType.MAX_REPS]: 'Максимум повторений',
+  [RecordType.MAX_1RM]: 'Расчётный 1ПМ',
+  [RecordType.MAX_TONNAGE]: 'Тоннаж упражнения',
+});
+
+/** Названия решений алгоритма адаптации. */
+export const decisionNames = Object.freeze({
+  [Decision.INCREASE]: 'Увеличение',
+  [Decision.KEEP]: 'Сохранение',
+  [Decision.DECREASE]: 'Снижение',
+});

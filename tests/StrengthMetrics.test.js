@@ -4,16 +4,16 @@ import { StrengthMetrics } from '../src/services/StrengthMetrics.js';
 
 const metrics = new StrengthMetrics();
 
-test('epley: 80 кг × 8 повторений ≈ 101,3 кг (формула 1.1)', () => {
-  assert.ok(Math.abs(metrics.epley(80, 8) - 101.33) < 0.01);
+test('epley: 80 кг × 8 повторений = 101,3 кг (формула 1.1, округление до 0,1)', () => {
+  assert.equal(metrics.epley(80, 8), 101.3);
 });
 
-test('epley: одно повторение ≈ рабочий вес', () => {
-  assert.ok(Math.abs(metrics.epley(100, 1) - 103.33) < 0.01);
+test('epley: одно повторение — 103,3 кг для 100 кг', () => {
+  assert.equal(metrics.epley(100, 1), 103.3);
 });
 
-test('brzycki: 80 кг × 8 повторений ≈ 99,3 кг (формула 1.2)', () => {
-  assert.ok(Math.abs(metrics.brzycki(80, 8) - 99.31) < 0.01);
+test('brzycki: 80 кг × 8 повторений = 99,3 кг (формула 1.2, округление до 0,1)', () => {
+  assert.equal(metrics.brzycki(80, 8), 99.3);
 });
 
 test('brzycki: одно повторение = рабочий вес', () => {
@@ -31,6 +31,11 @@ test('tonnage: Σ Wi · ri (формула 1.3)', () => {
     { weight: 75, reps: 8 },
   ];
   assert.equal(metrics.tonnage(sets), 640 + 560 + 600);
+});
+
+test('tonnage: округление до 0,1', () => {
+  assert.equal(metrics.tonnage([{ weight: 12.33, reps: 3 }]), 37);
+  assert.equal(metrics.tonnage([{ weight: 10.25, reps: 3 }]), 30.8);
 });
 
 test('tonnage: пустой список подходов — 0', () => {

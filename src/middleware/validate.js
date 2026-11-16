@@ -290,3 +290,88 @@ export function parseTemplateForm(body, { days, perDay, exerciseIds }) {
   }
   return { data: { ...meta, ownerId: null, isTemplate: true, days: dayList }, errors };
 }
+
+// ---------- Этап 9: тренировка, калькулятор 1ПМ ----------
+
+/** Пределы значений подхода (ФТ-17): вес, повторения, номер подхода. */
+export const SET_LIMITS = Object.freeze({ weight: [0, 999.99], reps: [1, 50], setNo: [1, 20] });
+
+/** Не более двух знаков после запятой (с допуском на двоичное представление: 1.15 · 100 = 114.999…). */
+const hasTwoDecimals = (n) => Math.abs(Math.round(n * 100) - n * 100) < 1e-6;
+
+/** Число из JSON или строки формы (запятая допустима) или null. */
+function toNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  const s = text(value).replace(',', '.');
+  return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : null;
+}
+
+/**
+ * Проверка подходов тренировки (POST /api/workouts).
+ * @param {unknown} sets массив [{ programExerciseId, setNo, weight, reps }]
+ * @param {number[]} peIds упражнения выбранного тренировочного дня
+ * @returns {{sets: Array<{programExerciseId: number, setNo: number, weight: number, reps: number}>, errors: string[]}}
+ */
+export function parseWorkoutSets(sets, peIds) {
+  const errors = [];
+  if (!Array.isArray(sets) || sets.length === 0) {
+    return { sets: [], errors: ['Внесите хотя бы один подход'] };
+  }
+  if (sets.length > 200) {
+    return { sets: [], errors: ['Слишком много подходов в одной тренировке'] };
+  }
+  const [wMin, wMax] = SET_LIMITS.weight;
+  const [rMin, rMax] = SET_LIMITS.reps;
+  const [nMin, nMax] = SET_LIMITS.setNo;
+  const seen = new Set();
+  const result = [];
+  sets.forEach((raw, i) => {
+    const where = `Подход ${i + 1}`;
+    const s = raw && typeof raw === 'object' ? raw : {};
+    const programExerciseId = toNumber(s.programExerciseId);
+    const setNo = toNumber(s.setNo);
+    const weight = toNumber(s.weight);
+    const reps = toNumber(s.reps);
+    if (!peIds.includes(programExerciseId)) {
+      errors.push(`${where}: упражнение не относится к выбранному тренировочному дню`);
+      return;
+    }
+    if (!Number.isInteger(setNo) || setNo < nMin || setNo > nMax) {
+      errors.push(`${where}: номер подхода — целое от ${nMin} до ${nMax}`);
+    } else if (seen.has(`${programExerciseId}:${setNo}`)) {
+      errors.push(`${where}: подход с таким номером уже внесён`);
+    }
+    seen.add(`${programExerciseId}:${setNo}`);
+    if (weight === null || weight < wMin || weight > wMax || !hasTwoDecimals(weight)) {
+      errors.push(`${where}: вес — неотрицательное число до ${String(wMax).replace('.', ',')} кг, не более двух знаков после запятой`);
+    }
+    if (!Number.isInteger(reps) || reps < rMin || reps > rMax) {
+      errors.push(`${where}: повторения — целое число от ${rMin} до ${rMax}`);
+    }
+    result.push({ programExerciseId, setNo, weight, reps });
+  });
+  return { sets: result, errors };
+}
+
+/** Пределы калькулятора 1ПМ: формула Бжицки определена при r < 37. */
+export const ONE_RM_LIMITS = Object.freeze({ weight: [0.5, 999.99], reps: [1, 36] });
+
+/**
+ * Проверка данных калькулятора 1ПМ (ФТ-06).
+ * @param {Record<string, unknown>} q weight, reps
+ * @returns {{data: {weight: number, reps: number}, errors: Record<string, string>}}
+ */
+export function parseOneRm(q) {
+  const errors = {};
+  const weight = toNumber(q.weight);
+  const reps = toNumber(q.reps);
+  const [wMin, wMax] = ONE_RM_LIMITS.weight;
+  const [rMin, rMax] = ONE_RM_LIMITS.reps;
+  if (weight === null || weight < wMin || weight > wMax || !hasTwoDecimals(weight)) {
+    errors.weight = `Вес — число от ${String(wMin).replace('.', ',')} до ${String(wMax).replace('.', ',')} кг`;
+  }
+  if (!Number.isInteger(reps) || reps < rMin || reps > rMax) {
+    errors.reps = `Повторения — целое число от ${rMin} до ${rMax}`;
+  }
+  return { data: { weight, reps }, errors };
+}

@@ -49,7 +49,8 @@
         </section>
 <%- include('partials/program-days', { days: active.days }) %>
         <div class="button-row">
-          <a class="button button--primary" href="/programs/<%= active.program.id %>">Изменить параметры</a>
+          <a class="button button--primary" href="/workouts/new">Начать тренировку</a>
+          <a class="button button--ghost" href="/programs/<%= active.program.id %>">Изменить параметры</a>
         </div>
 <% } else { -%>
         <p class="text-muted">Активной программы пока нет.</p>
