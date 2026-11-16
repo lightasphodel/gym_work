@@ -90,3 +90,23 @@ export function uploadMedia(field) {
     });
   };
 }
+
+/**
+ * Вариант uploadMedia для HTML-форм: ошибка проверки файла (формат, размер, сигнатура)
+ * не прерывает запрос, а сохраняется в req.uploadError, чтобы контроллер показал её
+ * у поля формы. Принятые до ошибки поля формы доступны в req.body.
+ * @param {string} field имя поля формы
+ */
+export function uploadMediaForForm(field) {
+  const receive = uploadMedia(field);
+  return (req, res, next) => {
+    receive(req, res, (err) => {
+      if (err && err.status >= 400 && err.status < 500) {
+        req.uploadError = err;
+        req.files = [];
+        return next();
+      }
+      next(err);
+    });
+  };
+}

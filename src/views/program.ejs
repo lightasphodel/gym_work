@@ -1,0 +1,79 @@
+<%#
+  Программа пользователя: параметры нагрузки по дням, замена упражнений,
+  активация черновика (с подтверждением замены активной программы), архивирование.
+-%>
+<%
+  const statusChip = {
+    DRAFT: ['Черновик', ''],
+    ACTIVE: ['Активна', ' chip--success'],
+    ARCHIVED: ['В архиве', ' chip--error'],
+  }[program.status];
+-%>
+      <h1 class="page__title"><%= program.title %></h1>
+      <div class="page__content">
+        <div class="chips">
+          <span class="chip chip--static<%= statusChip[1] %>"><%= statusChip[0] %></span>
+          <span class="chip chip--static"><%= goalNames[program.goal] %></span>
+          <span class="chip chip--static"><%= levelNames[program.level] %> уровень</span>
+        </div>
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (error) { -%>
+        <div class="alert alert--error" role="alert"><%= error %></div>
+<% } -%>
+<% if (program.status === 'DRAFT') { -%>
+        <p class="page__intro">Проверьте упражнения и стартовые рабочие веса: их можно изменить в таблицах ниже. Упражнение можно заменить равноценным на ту же группу мышц.</p>
+<% } -%>
+
+<%- include('partials/program-editor', { days, actionBase, editable, catalog, errors, values }) %>
+
+<% if (program.status === 'DRAFT') { -%>
+        <section class="card" aria-labelledby="activate-title">
+          <h2 id="activate-title">Активация</h2>
+          <form method="post" action="<%= actionBase %>/activate">
+<% if (activeProgram) { -%>
+            <p>Сейчас активна программа «<%= activeProgram.title %>». После активации она будет перенесена в архив, история тренировок сохранится.</p>
+            <div class="field">
+              <label class="check"><input type="checkbox" name="confirm" value="yes" required> Заменить активную программу</label>
+            </div>
+<% } -%>
+            <div class="button-row">
+              <button type="submit" class="button button--primary">Активировать программу</button>
+              <button type="submit" class="button button--ghost" form="archive-form">Отказаться от черновика</button>
+            </div>
+          </form>
+          <form method="post" action="<%= actionBase %>/archive" id="archive-form" hidden></form>
+        </section>
+<% } else if (program.status === 'ACTIVE') { -%>
+        <form method="post" action="<%= actionBase %>/archive">
+          <div class="button-row">
+            <a class="button button--ghost" href="/programs">К программе</a>
+            <button type="submit" class="button button--ghost">Завершить программу</button>
+          </div>
+        </form>
+<% } else { -%>
+        <div class="button-row">
+          <a class="button button--ghost" href="/programs">К программе</a>
+        </div>
+<% } -%>
+
+<% if (editable && !catalog) { -%>
+        <dialog class="viewer" id="replace-dialog" aria-labelledby="replace-title">
+          <form method="post" class="form" id="replace-form">
+            <h2 class="form__title" id="replace-title">Замена упражнения</h2>
+            <p class="viewer__caption" id="replace-current"></p>
+            <div class="alert alert--error" id="replace-error" role="alert" hidden></div>
+            <div class="field" id="replace-field">
+              <label for="replace-select">Равноценное упражнение</label>
+              <select id="replace-select" name="exerciseId" required></select>
+              <span class="field__hint">Та же группа мышц, доступный вам инвентарь</span>
+            </div>
+            <div class="button-row">
+              <button type="submit" class="button button--primary" id="replace-submit">Заменить</button>
+              <button type="button" class="button button--ghost" id="replace-cancel">Отмена</button>
+            </div>
+          </form>
+        </dialog>
+<% } -%>
+      </div>

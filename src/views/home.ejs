@@ -11,6 +11,11 @@
             <a class="button button--primary" href="/profile">Заполнить профиль</a>
 <% } -%>
           </section>
+          <section class="card" aria-labelledby="program-card-title">
+            <h2 id="program-card-title">Программа тренировок</h2>
+            <p>Составьте программу по профилю или возьмите готовый шаблон.</p>
+            <a class="button button--<%= profileComplete ? 'primary' : 'ghost' %>" href="/programs">Перейти к программе</a>
+          </section>
           <section class="card" aria-labelledby="exercises-card-title">
             <h2 id="exercises-card-title">Справочник упражнений</h2>
             <p>Техника выполнения, целевые группы мышц и необходимый инвентарь.</p>

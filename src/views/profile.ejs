@@ -19,6 +19,9 @@
         <section class="card form-card" aria-labelledby="profile-title">
           <form class="form" method="post" action="/profile" novalidate>
             <h2 class="form__title" id="profile-title">Анкета</h2>
+<% if (locals.required) { -%>
+            <div class="alert alert--error" role="alert">Чтобы составить программу, заполните анкету полностью</div>
+<% } -%>
 <% if (saved) { -%>
             <div class="alert alert--success" role="status">Профиль сохранён</div>
 <% } -%>

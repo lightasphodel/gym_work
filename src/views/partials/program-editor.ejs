@@ -1,0 +1,95 @@
+<%#
+  Редактор программы по дням: таблица упражнений с параметрами нагрузки.
+  Параметры: days, actionBase (адрес программы), editable, errors, values (введённые значения
+  при ошибке), catalog — для шаблона: список упражнений для выбора в строке; для личной
+  программы null — замена через окно «Заменить» (public/js/programPage.js).
+-%>
+<%
+  const val = (key, fallback) => (values[key] !== undefined ? values[key] : fallback);
+  const inv = (key) => (errors[key] ? ' aria-invalid="true"' : '');
+  const fields = [
+    ['sets', 'Подходы', 1, 10, 1],
+    ['repsMin', 'Повторения от', 1, 50, 1],
+    ['repsMax', 'Повторения до', 1, 50, 1],
+    ['restSec', 'Отдых, с', 0, 600, 5],
+    ['workingWeight', 'Рабочий вес, кг', 0, 999.99, 0.01],
+  ];
+-%>
+<% for (const day of days) { -%>
+        <section class="card" id="day-<%= day.dayNumber %>" aria-labelledby="day-title-<%= day.id %>">
+          <h2 id="day-title-<%= day.id %>">День <%= day.dayNumber %>. <%= day.title %></h2>
+<% const dayErrors = day.exercises.flatMap((ex) => ['exerciseId', ...fields.map((f) => f[0])].map((f) => errors[f + '_' + ex.id]).filter(Boolean)); -%>
+<% if (editable) { -%>
+          <form method="post" action="<%= actionBase %>/days/<%= day.id %>" novalidate>
+<% } -%>
+<% if (dayErrors.length) { -%>
+            <div class="alert alert--error" role="alert">
+              <ul class="result__list">
+<% for (const message of [...new Set(dayErrors)]) { -%>
+                <li><%= message %></li>
+<% } -%>
+              </ul>
+            </div>
+<% } -%>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Упражнение</th>
+<% for (const [, label] of fields) { -%>
+                    <th scope="col"><%= label %></th>
+<% } -%>
+<% if (editable && !catalog) { -%>
+                    <th scope="col">Замена</th>
+<% } -%>
+                  </tr>
+                </thead>
+                <tbody>
+<% for (const ex of day.exercises) { -%>
+                  <tr>
+                    <td>
+<% if (editable && catalog) { -%>
+                      <label class="visually-hidden" for="exerciseId_<%= ex.id %>">Упражнение <%= ex.orderNo %></label>
+                      <select id="exerciseId_<%= ex.id %>" name="exerciseId_<%= ex.id %>"<%- inv('exerciseId_' + ex.id) %>>
+<% if (!ex.isActive) { -%>
+                        <option value="<%= ex.exerciseId %>" selected><%= ex.name %> (неактивно)</option>
+<% } -%>
+<% for (const c of catalog) { -%>
+                        <option value="<%= c.id %>"<%- String(val('exerciseId_' + ex.id, ex.exerciseId)) === String(c.id) ? ' selected' : '' %>><%= c.name %></option>
+<% } -%>
+                      </select>
+<% } else { -%>
+                      <a href="/exercises/<%= ex.exerciseId %>"><%= ex.name %></a>
+                      <span class="caption"><br><%= ex.muscle %>, <%= ex.equipment %></span>
+<% } -%>
+                    </td>
+<% for (const [name, label, min, max, step] of fields) { const key = name + '_' + ex.id; -%>
+                    <td>
+<% if (editable) { -%>
+                      <label class="visually-hidden" for="<%= key %>"><%= label %>: <%= ex.name %></label>
+                      <input type="number" id="<%= key %>" name="<%= key %>" min="<%= min %>" max="<%= max %>" step="<%= step %>"
+                             value="<%= val(key, ex[name]) %>"<%- inv(key) %>>
+<% } else { -%>
+                      <%= name === 'workingWeight' ? formatNumber(ex[name]) : ex[name] %>
+<% } -%>
+                    </td>
+<% } -%>
+<% if (editable && !catalog) { -%>
+                    <td>
+                      <button type="button" class="button button--ghost" data-replace="<%= ex.id %>"
+                              data-exercise="<%= ex.exerciseId %>" data-name="<%= ex.name %>">Заменить</button>
+                    </td>
+<% } -%>
+                  </tr>
+<% } -%>
+                </tbody>
+              </table>
+            </div>
+<% if (editable) { -%>
+            <div class="button-row">
+              <button type="submit" class="button button--primary">Сохранить день <%= day.dayNumber %></button>
+            </div>
+          </form>
+<% } -%>
+        </section>
+<% } -%>

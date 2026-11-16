@@ -25,12 +25,13 @@ function formFromBody(body) {
   };
 }
 
-function renderProfile(res, { form, errors = {}, saved = false, isNew }) {
+function renderProfile(res, { form, errors = {}, saved = false, required = false, isNew }) {
   res.render('profile', {
     title: 'Тренировочный профиль',
     form,
     errors,
     saved,
+    required,
     isNew,
   });
 }
@@ -55,6 +56,7 @@ export class ProfileController {
     renderProfile(res, {
       form: formFromProfile(profile),
       saved: req.query.saved === '1',
+      required: req.query.required === '1',
       isNew: !profile,
     });
   }

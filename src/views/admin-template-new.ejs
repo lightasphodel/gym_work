@@ -1,0 +1,98 @@
+<%#
+  Новый шаблон (ФТ-14): название, цель, уровень, общие параметры нагрузки и состав дней.
+  Дни и упражнения создаются одним вызовом Program.create (одна транзакция), поэтому
+  структура задаётся сразу: shape.days дней по shape.perDay строк (пустая строка пропускается).
+  Параметры отдельных упражнений меняются после создания.
+-%>
+<%
+  const val = (key) => (typeof form[key] === 'string' ? form[key] : '');
+  const invalid = (name) => (errors[name] ? ' aria-invalid="true"' : '');
+  const hasErrors = Object.keys(errors).length > 0;
+-%>
+      <h1 class="page__title">Новый шаблон</h1>
+      <p class="page__intro">Дней: <%= shape.days %>, упражнений в дне — до <%= shape.perDay %>. Пустые строки не сохраняются. Подходы, повторения и отдых задаются общими, рабочий вес — 0 (пользователь укажет свой после копирования).</p>
+      <div class="page__content">
+        <form method="post" action="/admin/templates" novalidate>
+          <input type="hidden" name="days" value="<%= shape.days %>">
+          <input type="hidden" name="perDay" value="<%= shape.perDay %>">
+<% if (hasErrors) { -%>
+          <div class="alert alert--error" role="alert">Проверьте поля, отмеченные ниже</div>
+<% } -%>
+          <section class="card" aria-labelledby="meta-title">
+            <h2 id="meta-title">Шаблон</h2>
+            <div class="grid-3">
+              <div class="field">
+                <label for="title">Название</label>
+                <input type="text" id="title" name="title" maxlength="100" required value="<%= val('title') %>"<%- invalid('title') %>>
+<% if (errors.title) { %>                <span class="field__error"><%= errors.title %></span>
+<% } -%>
+              </div>
+              <div class="field">
+                <label for="goal">Цель</label>
+                <select id="goal" name="goal" required<%- invalid('goal') %>>
+                  <option value="">Выберите цель</option>
+<% for (const [value, name] of Object.entries(goalNames)) { -%>
+                  <option value="<%= value %>"<%- val('goal') === value ? ' selected' : '' %>><%= name %></option>
+<% } -%>
+                </select>
+<% if (errors.goal) { %>                <span class="field__error"><%= errors.goal %></span>
+<% } -%>
+              </div>
+              <div class="field">
+                <label for="level">Уровень</label>
+                <select id="level" name="level" required<%- invalid('level') %>>
+                  <option value="">Выберите уровень</option>
+<% for (const [value, name] of Object.entries(levelNames)) { -%>
+                  <option value="<%= value %>"<%- val('level') === value ? ' selected' : '' %>><%= name %></option>
+<% } -%>
+                </select>
+<% if (errors.level) { %>                <span class="field__error"><%= errors.level %></span>
+<% } -%>
+              </div>
+            </div>
+            <div class="grid-4">
+<% for (const [name, label, min, max] of [['sets', 'Подходы', 1, 10], ['repsMin', 'Повторения от', 1, 50], ['repsMax', 'Повторения до', 1, 50], ['restSec', 'Отдых, с', 0, 600]]) { -%>
+              <div class="field">
+                <label for="<%= name %>"><%= label %></label>
+                <input type="number" id="<%= name %>" name="<%= name %>" min="<%= min %>" max="<%= max %>" required value="<%= val(name) %>"<%- invalid(name) %>>
+<% if (errors[name]) { %>                <span class="field__error"><%= errors[name] %></span>
+<% } -%>
+              </div>
+<% } -%>
+            </div>
+          </section>
+
+<% for (let d = 1; d <= shape.days; d += 1) { -%>
+          <section class="card" aria-labelledby="day-<%= d %>-title">
+            <h2 id="day-<%= d %>-title">День <%= d %></h2>
+            <div class="field">
+              <label for="day<%= d %>_title">Название дня</label>
+              <input type="text" id="day<%= d %>_title" name="day<%= d %>_title" maxlength="100" required
+                     value="<%= val(`day${d}_title`) || `День ${d}` %>"<%- invalid(`day${d}_title`) %>>
+<% if (errors[`day${d}_title`]) { %>              <span class="field__error"><%= errors[`day${d}_title`] %></span>
+<% } -%>
+            </div>
+            <div class="grid-3">
+<% for (let k = 1; k <= shape.perDay; k += 1) { const key = `day${d}_ex${k}`; -%>
+              <div class="field">
+                <label for="<%= key %>">Упражнение <%= k %></label>
+                <select id="<%= key %>" name="<%= key %>"<%- invalid(key) %>>
+                  <option value="">—</option>
+<% for (const c of catalog) { -%>
+                  <option value="<%= c.id %>"<%- val(key) === String(c.id) ? ' selected' : '' %>><%= c.name %></option>
+<% } -%>
+                </select>
+<% if (errors[key]) { %>                <span class="field__error"><%= errors[key] %></span>
+<% } -%>
+              </div>
+<% } -%>
+            </div>
+          </section>
+<% } -%>
+
+          <div class="button-row">
+            <button type="submit" class="button button--primary">Создать шаблон</button>
+            <a class="button button--ghost" href="/admin/templates">Отмена</a>
+          </div>
+        </form>
+      </div>

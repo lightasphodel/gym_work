@@ -79,6 +79,8 @@
   --day-pad: 17px;
   --btn-row-gap: 9px;
   --chip-gap: 4px;
+  --table-input-min: 76px;       /* поле ввода в ячейке таблицы (подходы, повторения, вес) */
+  --table-select-min: 220px;     /* выбор упражнения в ячейке таблицы */
   --transition: 0.15s;
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F1EAEA' stroke-width='1.5'/%3E%3C/svg%3E");
 }
@@ -200,7 +202,8 @@ a:hover {
 }
 
 /* Блоки содержимого страницы (карточки, формы, таблицы) идут с отступом сетки */
-.page__content > * + * {
+.page__content > * + *,
+.page__content > form > :not([type="hidden"]) + * {
   margin-top: var(--gap);
 }
 
@@ -773,6 +776,13 @@ textarea[aria-invalid="true"] {
   border-color: var(--error);
 }
 
+input[type="file"] {
+  max-width: 100%;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--ink);
+}
+
 input[type="checkbox"],
 input[type="radio"] {
   width: 13px;
@@ -863,6 +873,25 @@ input[type="radio"] {
 .table .is-numeric {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* Поля ввода в таблице: не сжимаются уже минимальной ширины, таблица прокручивается в .table-wrap */
+.table input {
+  min-width: var(--table-input-min);
+}
+
+.table select {
+  min-width: var(--table-select-min);
+}
+
+.table .button-row {
+  flex-wrap: nowrap;
+}
+
+/* Кнопки под таблицей или сеткой внутри формы */
+.table-wrap + .button-row,
+.card > .button-row {
+  margin-top: var(--gap);
 }
 
 /* ---------- Пагинация ---------- */

@@ -177,6 +177,7 @@ ON CONFLICT DO NOTHING;
 -- Шаблонная программа «Full Body для начинающих»:
 -- 3 дня, 3 подхода по 8–12 повторений, отдых 90 с (цель GENERAL, таблица 1.1).
 -- Рабочий вес 0 — пользователь задаёт его после копирования шаблона.
+-- Статус ACTIVE у шаблона означает «опубликован»: пользователи видят и копируют его.
 -- ---------------------------------------------------------------------
 DO $$
 DECLARE
@@ -190,7 +191,7 @@ BEGIN
     END IF;
 
     INSERT INTO programs (owner_id, title, goal, level, is_template, status)
-    VALUES (NULL, 'Full Body для начинающих', 'GENERAL', 'BEGINNER', TRUE, 'DRAFT')
+    VALUES (NULL, 'Full Body для начинающих', 'GENERAL', 'BEGINNER', TRUE, 'ACTIVE')
     RETURNING id INTO v_program_id;
 
     FOR d IN

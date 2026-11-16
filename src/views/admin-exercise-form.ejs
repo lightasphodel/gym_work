@@ -1,0 +1,151 @@
+<%#
+  Форма упражнения справочника (ФТ-13): создание (exercise = null) и изменение.
+  form — значения полей (строки), errors — ошибки по полям, media — загруженные файлы.
+  Файлы принимаются multipart/form-data; поле файлов — последнее, чтобы при ошибке
+  загрузки остальные поля формы уже были приняты.
+-%>
+<%
+  const invalid = (name) => (errors[name] ? ' aria-invalid="true"' : '');
+  // Сообщение может содержать имя загруженного файла — экранируется полностью.
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const errorFor = (name) => (errors[name] ? `<span class="field__error" id="${name}-error">${esc(errors[name])}</span>` : '');
+  const action = exercise ? `/admin/exercises/${exercise.id}` : '/admin/exercises';
+-%>
+      <h1 class="page__title"><%= exercise ? exercise.name : 'Новое упражнение' %></h1>
+      <div class="page__content">
+<% if (exercise && !exercise.isActive) { -%>
+        <div class="alert alert--error" role="status">Упражнение деактивировано: оно не показывается пользователям и не попадает в подбор.</div>
+<% } -%>
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+        <section class="card form-card" aria-labelledby="exercise-form-title">
+          <form class="form" method="post" action="<%= action %>" enctype="multipart/form-data" novalidate>
+            <h2 class="form__title" id="exercise-form-title"><%= exercise ? 'Изменение упражнения' : 'Добавление упражнения' %></h2>
+<% if (Object.keys(errors).length) { -%>
+            <div class="alert alert--error" role="alert">Проверьте поля, отмеченные ниже</div>
+<% } -%>
+
+            <div class="field">
+              <label for="name">Название</label>
+              <input type="text" id="name" name="name" maxlength="100" required value="<%= form.name %>"<%- invalid('name') %>>
+              <%- errorFor('name') %>
+            </div>
+
+            <div class="field">
+              <label for="primary-muscle">Основная группа мышц</label>
+              <select id="primary-muscle" name="primaryMuscleId" required<%- invalid('primaryMuscleId') %>>
+                <option value="">Выберите группу</option>
+<% for (const m of muscles) { -%>
+                <option value="<%= m.id %>"<%- form.primaryMuscleId === String(m.id) ? ' selected' : '' %>><%= m.name %></option>
+<% } -%>
+              </select>
+              <%- errorFor('primaryMuscleId') %>
+            </div>
+
+            <div class="field" role="group" aria-labelledby="secondary-label">
+              <span class="field__label" id="secondary-label">Вспомогательные группы мышц</span>
+              <div class="chips">
+<% for (const m of muscles) { -%>
+                <input type="checkbox" class="chip-input visually-hidden" id="secondary-<%= m.id %>" name="secondaryMuscleIds"
+                       value="<%= m.id %>"<%- form.secondaryMuscleIds.includes(String(m.id)) ? ' checked' : '' %>>
+                <label class="chip" for="secondary-<%= m.id %>"><%= m.name %></label>
+<% } -%>
+              </div>
+              <%- errorFor('secondaryMuscleIds') %>
+            </div>
+
+            <div class="field">
+              <label for="equipment">Инвентарь</label>
+              <select id="equipment" name="equipment" required<%- invalid('equipment') %>>
+                <option value="">Выберите инвентарь</option>
+<% for (const item of equipmentList) { -%>
+                <option value="<%= item %>"<%- form.equipment === item ? ' selected' : '' %>><%= item %></option>
+<% } -%>
+              </select>
+              <%- errorFor('equipment') %>
+            </div>
+
+            <div class="field">
+              <label for="difficulty">Сложность техники</label>
+              <select id="difficulty" name="difficulty" required<%- invalid('difficulty') %>>
+<% for (const [value, name] of Object.entries(difficultyNames)) { -%>
+                <option value="<%= value %>"<%- form.difficulty === value ? ' selected' : '' %>><%= value %> — <%= name %></option>
+<% } -%>
+              </select>
+              <%- errorFor('difficulty') %>
+            </div>
+
+            <div class="field">
+              <label for="weight-step">Шаг изменения веса, кг</label>
+              <input type="number" id="weight-step" name="weightStep" min="0" max="20" step="0.01" required
+                     value="<%= form.weightStep %>" aria-describedby="weight-step-hint"<%- invalid('weightStep') %>>
+              <span class="field__hint" id="weight-step-hint">Штанга — 2,5; гантели — 1; тренажёр — 5; собственный вес — 0</span>
+              <%- errorFor('weightStep') %>
+            </div>
+
+            <div class="field">
+              <label for="technique">Техника выполнения</label>
+              <textarea id="technique" name="technique" maxlength="5000"<%- invalid('technique') %>><%= form.technique %></textarea>
+              <%- errorFor('technique') %>
+            </div>
+
+            <div class="field">
+              <label for="media">Фото и видео</label>
+              <input type="file" id="media" name="media" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4"
+                     aria-describedby="media-hint"<%- invalid('media') %>>
+              <span class="field__hint" id="media-hint">JPG, PNG, WEBP или MP4, до 10 МБ каждый, не более 10 файлов</span>
+              <%- errorFor('media') %>
+            </div>
+
+            <div class="button-row">
+              <button type="submit" class="button button--primary">Сохранить</button>
+              <a class="button button--ghost" href="/admin/exercises">К справочнику</a>
+            </div>
+          </form>
+        </section>
+
+<% if (exercise) { -%>
+        <section class="card" aria-labelledby="media-title">
+          <h2 id="media-title">Загруженные файлы</h2>
+<% if (media.length) { -%>
+          <div class="gallery">
+<% media.forEach((m, i) => { -%>
+            <div>
+              <button type="button" class="gallery__item" data-src="/media/<%= m.id %>" data-type="<%= m.mediaType %>"
+                      aria-label="Открыть файл <%= i + 1 %>">
+<% if (m.mediaType === 'video') { -%>
+                <video src="/media/<%= m.id %>" preload="metadata" muted></video>
+<% } else { -%>
+                <img src="/media/<%= m.id %>" alt="<%= exercise.name %>, файл <%= i + 1 %>" loading="lazy">
+<% } -%>
+                <span class="gallery__caption"><%= m.mediaType === 'video' ? 'Видео' : 'Фото' %> <%= i + 1 %> · <%= m.mimeType %></span>
+              </button>
+              <form method="post" action="/admin/exercises/<%= exercise.id %>/media/<%= m.id %>/delete">
+                <div class="button-row">
+                  <button type="submit" class="button button--ghost" aria-label="Удалить файл <%= i + 1 %>">Удалить</button>
+                </div>
+              </form>
+            </div>
+<% }) -%>
+          </div>
+          <dialog class="viewer" id="media-viewer" aria-label="Просмотр медиафайла">
+            <div id="media-viewer-body"></div>
+            <p class="viewer__caption" id="media-viewer-caption"></p>
+            <form method="dialog">
+              <button type="submit" class="button button--ghost">Закрыть</button>
+            </form>
+          </dialog>
+<% } else { -%>
+          <p class="text-muted">Файлы ещё не загружены.</p>
+<% } -%>
+        </section>
+<% if (exercise.isActive) { -%>
+        <form method="post" action="/admin/exercises/<%= exercise.id %>/deactivate">
+          <div class="button-row">
+            <button type="submit" class="button button--ghost">Деактивировать упражнение</button>
+          </div>
+        </form>
+<% } -%>
+<% } -%>
+      </div>

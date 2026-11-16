@@ -141,7 +141,7 @@
 14. ✅ **Закрыт на этапах 5–7:** `AdminController.users/block/unblock`, `/admin/users`, POST `/admin/users/:id/block|unblock`; свою запись заблокировать нельзя (400). Было: AdminController + `/admin/users`, `block()/unblock()`.
 
 **P3 — записать сейчас, исправлять на своих этапах**
-15. Этап 8: `#loadTable` привести к табл. 1.1 PLAN (+ подходы по уровню); ~~`Exercise.search` — `difficulty <=`~~ ✅ 0.2; зависимость ProgramGenerator → ExerciseSelector; typedef `Split`.
+15. ✅ **Закрыт на этапе 8:** `#loadTable` = табл. 1.1 (отдых 90/90/180/60 с) + подходы по уровню 3/4/5; `ProgramGenerator` получает `ExerciseSelector` в конструкторе; typedef `Split`; `ExerciseSelector.filter/suggestReplacement` реализованы. Было: Этап 8: `#loadTable` привести к табл. 1.1 PLAN (+ подходы по уровню); ~~`Exercise.search` — `difficulty <=`~~ ✅ 0.2; зависимость ProgramGenerator → ExerciseSelector; typedef `Split`.
 16. ✅ **Закрыт на этапе 0.2** (решение — CLAUDE.md, «Тестирование приватных методов»: сценарно через публичный метод + `mock.method`). Было: этапы 8–9: PLAN требует тестов для приватных `#selectSplit`, `#calcStartWeight`, `#decide`, `#roundToEquipment` — напрямую из теста их не вызвать; нужно решение (тестировать через `generate()/adapt()` с моками или иначе).
 17. Этап 9: округление до 0,1 в `StrengthMetrics`; typedef `Result`; ~~CHECK `reps` согласовать с 1–50~~ ✅ 0.2 (`BETWEEN 1 AND 50`).
 18. Этап 10: typedef `Series/BalanceReport/Regularity`, полный JSDoc.

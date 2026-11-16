@@ -1,0 +1,16 @@
+<%#
+  Краткий вид программы: карточки дней со списком упражнений (только чтение).
+  Параметр: days — дни из loadProgramView().
+-%>
+<div class="grid-3">
+<% for (const day of days) { -%>
+  <article class="day-card">
+    <h3 class="day-card__title">День <%= day.dayNumber %>. <%= day.title %></h3>
+    <ol class="result__list">
+<% for (const ex of day.exercises) { -%>
+      <li><%= ex.name %> — <%= ex.sets %> × <%= ex.repsMin %>–<%= ex.repsMax %><% if (Number(ex.workingWeight) > 0) { %>, <span class="num-accent"><%= formatNumber(ex.workingWeight) %> кг</span><% } %></li>
+<% } -%>
+    </ol>
+  </article>
+<% } -%>
+</div>

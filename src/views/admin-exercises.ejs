@@ -1,0 +1,54 @@
+<%#
+  Справочник упражнений для администратора (ФТ-13): все упражнения, включая неактивные.
+-%>
+      <h1 class="page__title">Справочник упражнений</h1>
+      <p class="page__intro">Упражнения не удаляются: они могут входить в программы и журнал тренировок. Деактивированное упражнение пропадает из справочника пользователей и из подбора.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+        <div class="button-row">
+          <a class="button button--primary" href="/admin/exercises/new">Добавить упражнение</a>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Упражнение</th>
+                <th scope="col">Группа мышц</th>
+                <th scope="col">Инвентарь</th>
+                <th scope="col">Сложность</th>
+                <th scope="col">Статус</th>
+                <th scope="col">Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+<% for (const e of exercises) { -%>
+              <tr>
+                <td><a href="/admin/exercises/<%= e.id %>/edit"><%= e.name %></a></td>
+                <td><%= muscleNames[e.primaryMuscleId] ?? '' %></td>
+                <td><%= e.equipment %></td>
+                <td><%= difficultyNames[e.difficulty] ?? e.difficulty %></td>
+                <td>
+<% if (e.isActive) { -%>
+                  <span class="chip chip--static chip--success">Активно</span>
+<% } else { -%>
+                  <span class="chip chip--static chip--error">Деактивировано</span>
+<% } -%>
+                </td>
+                <td>
+                  <div class="button-row">
+                    <a class="button button--ghost" href="/admin/exercises/<%= e.id %>/edit" aria-label="Изменить «<%= e.name %>»">Изменить</a>
+<% if (e.isActive) { -%>
+                    <form method="post" action="/admin/exercises/<%= e.id %>/deactivate">
+                      <button type="submit" class="button button--ghost" aria-label="Деактивировать «<%= e.name %>»">Деактивировать</button>
+                    </form>
+<% } -%>
+                  </div>
+                </td>
+              </tr>
+<% } -%>
+            </tbody>
+          </table>
+        </div>
+      </div>

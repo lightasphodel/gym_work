@@ -1,0 +1,75 @@
+<%#
+  Шаблонные программы (ФТ-14): список, публикация, создание нового шаблона.
+  Пользователи видят и копируют только опубликованные шаблоны.
+-%>
+      <h1 class="page__title">Шаблонные программы</h1>
+      <p class="page__intro">Пользователи видят только опубликованные шаблоны. Снятие с публикации не затрагивает уже сделанные копии.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (templates.length) { -%>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Шаблон</th>
+                <th scope="col">Цель</th>
+                <th scope="col">Уровень</th>
+                <th scope="col">Статус</th>
+                <th scope="col">Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+<% for (const t of templates) { -%>
+              <tr>
+                <td><a href="/admin/templates/<%= t.id %>"><%= t.title %></a></td>
+                <td><%= goalNames[t.goal] %></td>
+                <td><%= levelNames[t.level] %></td>
+                <td><span class="chip chip--static<%= t.status === 'ACTIVE' ? ' chip--success' : '' %>"><%= t.statusName %></span></td>
+                <td>
+                  <div class="button-row">
+                    <a class="button button--ghost" href="/admin/templates/<%= t.id %>" aria-label="Изменить «<%= t.title %>»">Изменить</a>
+<% if (t.status === 'ACTIVE') { -%>
+                    <form method="post" action="/admin/templates/<%= t.id %>/unpublish">
+                      <button type="submit" class="button button--ghost" aria-label="Снять с публикации «<%= t.title %>»">Снять с публикации</button>
+                    </form>
+<% } else { -%>
+                    <form method="post" action="/admin/templates/<%= t.id %>/publish">
+                      <button type="submit" class="button button--primary" aria-label="Опубликовать «<%= t.title %>»">Опубликовать</button>
+                    </form>
+<% } -%>
+                  </div>
+                </td>
+              </tr>
+<% } -%>
+            </tbody>
+          </table>
+        </div>
+<% } else { -%>
+        <p class="text-muted">Шаблонов пока нет.</p>
+<% } -%>
+
+        <section class="card form-card" aria-labelledby="new-template-title">
+          <form class="form" method="get" action="/admin/templates/new">
+            <h2 class="form__title" id="new-template-title">Новый шаблон</h2>
+            <div class="field">
+              <label for="new-days">Тренировочных дней</label>
+              <select id="new-days" name="days">
+<% for (let n = limits.days[0]; n <= limits.days[1]; n += 1) { -%>
+                <option value="<%= n %>"<%- n === shape.days ? ' selected' : '' %>><%= n %></option>
+<% } -%>
+              </select>
+            </div>
+            <div class="field">
+              <label for="new-per-day">Упражнений в дне (не больше)</label>
+              <select id="new-per-day" name="perDay">
+<% for (let n = limits.perDay[0]; n <= limits.perDay[1]; n += 1) { -%>
+                <option value="<%= n %>"<%- n === shape.perDay ? ' selected' : '' %>><%= n %></option>
+<% } -%>
+              </select>
+            </div>
+            <button type="submit" class="button button--primary">Перейти к составу</button>
+          </form>
+        </section>
+      </div>

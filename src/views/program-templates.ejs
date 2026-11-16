@@ -1,0 +1,30 @@
+<%#
+  Опубликованные шаблонные программы (ФТ-16): состав по дням и копирование.
+  templates — результаты loadProgramView() ({ program, days }).
+-%>
+      <h1 class="page__title">Шаблонные программы</h1>
+      <p class="page__intro">Скопируйте шаблон — копия сохранится черновиком. В ней можно заменить упражнения, задать рабочие веса и затем активировать программу.</p>
+      <div class="page__content">
+<% if (templates.length === 0) { -%>
+        <p class="text-muted">Опубликованных шаблонов пока нет.</p>
+<% } -%>
+<% for (const t of templates) { -%>
+        <section class="card" aria-labelledby="template-<%= t.program.id %>">
+          <h2 id="template-<%= t.program.id %>"><%= t.program.title %></h2>
+          <div class="chips">
+            <span class="chip chip--static"><%= goalNames[t.program.goal] %></span>
+            <span class="chip chip--static"><%= levelNames[t.program.level] %> уровень</span>
+            <span class="chip chip--static">Дней: <%= t.days.length %></span>
+          </div>
+        </section>
+<%- include('partials/program-days', { days: t.days }) %>
+        <form method="post" action="/programs/templates/<%= t.program.id %>/copy">
+          <div class="button-row">
+            <button type="submit" class="button button--primary">Скопировать «<%= t.program.title %>»</button>
+          </div>
+        </form>
+<% } -%>
+        <div class="button-row">
+          <a class="button button--ghost" href="/programs">К программе</a>
+        </div>
+      </div>

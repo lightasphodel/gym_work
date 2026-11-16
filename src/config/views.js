@@ -22,6 +22,12 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleDateString('ru-RU') : '';
 }
 
+/** Число в русской записи: десятичная запятая, без лишних нулей (32.5 → «32,5»). */
+function formatNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? String(Math.round(n * 100) / 100).replace('.', ',') : '';
+}
+
 /**
  * Обработчик файлов .ejs для Express: страница, затем макет.
  * Передайте layout: false в res.render, чтобы получить страницу без макета.
@@ -41,6 +47,7 @@ export function setupViews(app) {
   app.set('views', config.paths.views);
   app.locals.roleNames = roleNames;
   app.locals.formatDate = formatDate;
+  app.locals.formatNumber = formatNumber;
   app.locals.equipmentList = EQUIPMENT;
   app.locals.goalNames = goalNames;
   app.locals.levelNames = levelNames;

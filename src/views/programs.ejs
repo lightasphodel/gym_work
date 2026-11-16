@@ -1,0 +1,57 @@
+<%#
+  Программа тренировок пользователя: активная программа, черновик текущего сеанса,
+  генерация программы (ФТ-04) и переход к шаблонам (ФТ-16).
+-%>
+      <h1 class="page__title">Программа тренировок</h1>
+      <p class="page__intro">Составьте программу по своему профилю или возьмите за основу шаблон. Новая программа сначала сохраняется черновиком: проверьте упражнения и стартовые веса, затем активируйте её.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (error) { -%>
+        <div class="alert alert--error" role="alert"><%= error %></div>
+<% } -%>
+        <div class="grid-3">
+          <section class="card" aria-labelledby="generate-title">
+            <h2 id="generate-title">Составить по профилю</h2>
+<% if (profileComplete) { -%>
+            <p>Сплит, упражнения, подходы, повторения, отдых и стартовые веса подбираются по цели, уровню, инвентарю и массе тела.</p>
+            <form method="post" action="/programs/generate">
+              <button type="submit" class="button button--primary">Составить программу</button>
+            </form>
+<% } else { -%>
+            <p>Для составления программы заполните тренировочный профиль.</p>
+            <a class="button button--primary" href="/profile">Заполнить профиль</a>
+<% } -%>
+          </section>
+          <section class="card" aria-labelledby="templates-title">
+            <h2 id="templates-title">Взять шаблон</h2>
+            <p>Готовые программы, составленные администратором. Копию можно изменить под себя.</p>
+            <a class="button button--ghost" href="/programs/templates">Выбрать шаблон</a>
+          </section>
+<% if (draft) { -%>
+          <section class="card" aria-labelledby="draft-title">
+            <h2 id="draft-title">Черновик</h2>
+            <p><%= draft.title %><br><span class="caption">создан <%= formatDate(draft.createdAt) %></span></p>
+            <a class="button button--primary" href="/programs/<%= draft.id %>">Открыть черновик</a>
+          </section>
+<% } -%>
+        </div>
+
+<% if (active) { -%>
+        <section class="card" aria-labelledby="active-title">
+          <h2 id="active-title">Активная программа: <%= active.program.title %></h2>
+          <div class="chips">
+            <span class="chip chip--static chip--success">Активна</span>
+            <span class="chip chip--static"><%= goalNames[active.program.goal] %></span>
+            <span class="chip chip--static"><%= levelNames[active.program.level] %> уровень</span>
+          </div>
+        </section>
+<%- include('partials/program-days', { days: active.days }) %>
+        <div class="button-row">
+          <a class="button button--primary" href="/programs/<%= active.program.id %>">Изменить параметры</a>
+        </div>
+<% } else { -%>
+        <p class="text-muted">Активной программы пока нет.</p>
+<% } -%>
+      </div>

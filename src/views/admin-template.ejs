@@ -1,0 +1,65 @@
+<%#
+  Изменение шаблона (ФТ-14): название, цель, уровень (Program.update), упражнения
+  и параметры нагрузки по дням (ProgramExercise.update), публикация.
+-%>
+<%
+  const metaVal = (key) => (typeof meta[key] === 'string' ? meta[key] : '');
+  const metaInvalid = (name) => (metaErrors[name] ? ' aria-invalid="true"' : '');
+-%>
+      <h1 class="page__title"><%= program.title %></h1>
+      <div class="page__content">
+        <div class="chips">
+          <span class="chip chip--static<%= program.status === 'ACTIVE' ? ' chip--success' : '' %>"><%= statusName %></span>
+          <span class="chip chip--static">Дней: <%= days.length %></span>
+        </div>
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (error) { -%>
+        <div class="alert alert--error" role="alert"><%= error %></div>
+<% } -%>
+
+        <section class="card" aria-labelledby="meta-title">
+          <h2 id="meta-title">Шаблон</h2>
+          <form method="post" action="<%= actionBase %>" novalidate>
+            <div class="grid-3">
+              <div class="field">
+                <label for="title">Название</label>
+                <input type="text" id="title" name="title" maxlength="100" required value="<%= metaVal('title') %>"<%- metaInvalid('title') %>>
+<% if (metaErrors.title) { %>                <span class="field__error"><%= metaErrors.title %></span>
+<% } -%>
+              </div>
+              <div class="field">
+                <label for="goal">Цель</label>
+                <select id="goal" name="goal" required<%- metaInvalid('goal') %>>
+<% for (const [value, name] of Object.entries(goalNames)) { -%>
+                  <option value="<%= value %>"<%- metaVal('goal') === value ? ' selected' : '' %>><%= name %></option>
+<% } -%>
+                </select>
+              </div>
+              <div class="field">
+                <label for="level">Уровень</label>
+                <select id="level" name="level" required<%- metaInvalid('level') %>>
+<% for (const [value, name] of Object.entries(levelNames)) { -%>
+                  <option value="<%= value %>"<%- metaVal('level') === value ? ' selected' : '' %>><%= name %></option>
+<% } -%>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="button button--primary">Сохранить шаблон</button>
+          </form>
+        </section>
+
+<%- include('partials/program-editor', { days, actionBase, editable, catalog, errors, values }) %>
+
+        <div class="button-row">
+<% if (program.status === 'ACTIVE') { -%>
+          <button type="submit" class="button button--ghost" form="unpublish-form">Снять с публикации</button>
+<% } else { -%>
+          <button type="submit" class="button button--primary" form="publish-form">Опубликовать</button>
+<% } -%>
+          <a class="button button--ghost" href="/admin/templates">К списку шаблонов</a>
+        </div>
+        <form method="post" action="<%= actionBase %>/publish" id="publish-form" hidden></form>
+        <form method="post" action="<%= actionBase %>/unpublish" id="unpublish-form" hidden></form>
+      </div>
