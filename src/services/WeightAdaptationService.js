@@ -114,7 +114,7 @@ export class WeightAdaptationService {
         if (weighted && e1rm > 0) target = Math.min(target, e1rm * intensityMax);
         newWeight = Math.max(0, this.#roundToEquipment(Math.max(0, target), exercise.equipment));
 
-        // Вес с отягощением не изменился (предел 10 %, граница 1ПМ или шаг инвентаря) — сохранить.
+        // Вес с отягощением не изменился (граница по 1ПМ или округление до инвентаря) — сохранить.
         if (weighted && (newWeight === base || (decision === Decision.INCREASE && newWeight < base))) {
           decision = Decision.KEEP;
           newWeight = base;
@@ -166,8 +166,10 @@ export class WeightAdaptationService {
   }
 
   /**
-   * Шаг увеличения веса: не меньше шага упражнения и 2 % текущего веса,
-   * не больше maxIncreasePct (10 %) текущего веса. Для упражнений без отягощения — 0.
+   * Шаг увеличения веса: 2–10 % текущего веса (рекомендация ACSM), но не меньше шага
+   * упражнения. Если 10 % меньше шага упражнения (малый вес: тренажёр до 50 кг, штанга
+   * до 25 кг, гантели до 10 кг), вес растёт ровно на один шаг — меньшее изменение
+   * инвентарём не набрать. Для упражнений без отягощения — 0.
    * @param {Exercise} exercise
    * @param {number} weight текущий рабочий вес, кг
    * @returns {number} шаг, кг
@@ -175,12 +177,13 @@ export class WeightAdaptationService {
   #calcStep(exercise, weight) {
     const step = Number(exercise.weightStep);
     if (!(step > 0)) return 0;
-    return Math.min(Math.max(step, weight * MIN_INCREASE_PCT), weight * this.#maxIncreasePct);
+    const byPercent = Math.min(Math.max(step, weight * MIN_INCREASE_PCT), weight * this.#maxIncreasePct);
+    return Math.max(byPercent, step);
   }
 
   /**
    * Этап 4. Округление до ближайшего значения, которое можно набрать инвентарём и которое
-   * не больше расчётного (рост не превышает 10 % и границу по 1ПМ): штанга — кратно 2,5 кг,
+   * не больше расчётного (рост не превышает шаг calcStep и границу по 1ПМ): штанга — кратно 2,5 кг,
    * гантели — 1 кг, тренажёр — 5 кг; собственный вес — без изменения.
    * @param {number} weight расчётный вес, кг
    * @param {string} equipment инвентарь упражнения

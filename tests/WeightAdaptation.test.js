@@ -119,8 +119,8 @@ test('adapt: гантели — новый вес кратен 1 кг, рост 
   assert.ok(entry.newWeight <= 12 * 1.1);
 });
 
-test('adapt: штанга — кратно 2,5 и рост ≤ 10 % при любом весе', async () => {
-  for (const weight of [40, 60, 82.5, 100, 140]) {
+test('adapt: штанга — кратно 2,5, рост ≤ 10 % при весе от 25 кг', async () => {
+  for (const weight of [25, 40, 60, 82.5, 100, 140, 200]) {
     const { entry } = await runAdapt({ reps: [12, 12, 12], weight });
     assert.equal(entry.newWeight % 2.5, 0, `вес ${weight}`);
     assert.ok(entry.newWeight <= weight * 1.1 + 1e-9, `вес ${weight}: ${entry.newWeight}`);
@@ -129,15 +129,34 @@ test('adapt: штанга — кратно 2,5 и рост ≤ 10 % при лю�
   }
 });
 
-test('adapt: шаг инвентаря больше 10 % — вес не меняется, решение KEEP', async () => {
-  // Штанга 20 кг: +2,5 = 12,5 % > 10 %; гантели 8 кг: +1 = 12,5 %.
-  for (const [weight, kind] of [[20, 'barbell'], [8, 'dumbbell'], [40, 'machine']]) {
+test('adapt: шаг инвентаря больше 10 % (малый вес) — рост ровно на один шаг', async () => {
+  // Штанга 20 кг: 10 % = 2 кг < 2,5; гантели 8 кг: 0,8 < 1; тренажёр 45 кг: 4,5 < 5.
+  for (const [weight, kind, expected] of [[20, 'barbell', 22.5], [8, 'dumbbell', 9], [45, 'machine', 50], [5, 'dumbbell', 6]]) {
     const { entry, updateWeight } = await runAdapt({ reps: [12, 12, 12], weight, kind });
-    assert.equal(entry.decision, 'KEEP', kind);
-    assert.equal(entry.newWeight, weight);
-    assert.equal(updateWeight.mock.callCount(), 0);
+    assert.equal(entry.decision, 'INCREASE', `${kind} ${weight}`);
+    assert.equal(entry.newWeight, expected);
+    assert.equal(updateWeight.mock.calls[0].arguments[0], expected);
     mock.restoreAll();
   }
+});
+
+test('adapt: рост не больше 10 % или одного шага инвентаря, если шаг больше', async () => {
+  const steps = { barbell: 2.5, dumbbell: 1, machine: 5 };
+  for (const kind of Object.keys(steps)) {
+    for (const weight of [5, 10, 15, 20, 30, 45, 50, 75, 120]) {
+      const { entry } = await runAdapt({ reps: [12, 12, 12], weight, kind });
+      const growth = entry.newWeight - weight;
+      assert.ok(growth <= Math.max(weight * 0.1, steps[kind]) + 1e-9, `${kind} ${weight} → ${entry.newWeight}`);
+      mock.restoreAll();
+    }
+  }
+});
+
+test('adapt: один шаг инвентаря тоже ограничен оценкой 1ПМ', async () => {
+  // GENERAL (до 70 % 1ПМ): 45 кг × 12 в тренажёре → 1ПМ ≈ 63,9; 70 % ≈ 44,7 < 50 — вес сохраняется.
+  const { entry } = await runAdapt({ reps: [12, 12, 12], weight: 45, kind: 'machine', goal: 'GENERAL' });
+  assert.equal(entry.decision, 'KEEP');
+  assert.equal(entry.newWeight, 45);
 });
 
 test('adapt: тренажёр — кратно 5 кг', async () => {

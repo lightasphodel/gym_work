@@ -35,7 +35,7 @@ export function explainDecision(entry, pe, sets, exercise) {
         return `Рабочий вес не был задан — по результатам тренировки он установлен: ${kg(entry.newWeight)}`;
       }
       if (allTop && weighted) {
-        return `Верхняя граница достигнута, но шаг увеличения превышает 10 % или допустимую интенсивность для цели — вес сохранён: ${kg(entry.newWeight)}`;
+        return `Верхняя граница достигнута, но больший вес превысил бы допустимую интенсивность для цели (по оценке 1ПМ) — вес сохранён: ${kg(entry.newWeight)}`;
       }
       if (sets.some((s) => s.reps < pe.repsMin)) {
         return weighted

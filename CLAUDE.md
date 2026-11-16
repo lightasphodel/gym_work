@@ -103,7 +103,7 @@ const created = mock.method(WeightHistory, 'create', async (d) => d);
 | Приватный метод | Через | Что проверяем |
 |---|---|---|
 | #evaluateSets, #decide | adapt() | ABOVE→INCREASE; WITHIN→KEEP; BELOW один раз→KEEP; BELOW дважды подряд→DECREASE |
-| #calcStep, #roundToEquipment | adapt() | newWeight: штанга кратно 2,5, гантели кратно 1, рост ≤ 10 % |
+| #calcStep, #roundToEquipment | adapt() | newWeight: штанга кратно 2,5, гантели кратно 1, рост ≤ 10 % (при малом весе — ровно один шаг инвентаря) |
 | #selectSplit | generate() | мок `Program.create`: `data.days.length` и названия дней при 3 / 4 / 5 тренировках |
 | #pickExercises, #calcStartWeight | generate() | мок `ExerciseSelector.prototype.filter`; проверяем упражнения и стартовые веса в `data.days[].exercises[]` |
 | #isBetter | detect() | мок `PersonalRecord.findBest`: рекорд создаётся только при превышении |

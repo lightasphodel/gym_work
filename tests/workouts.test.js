@@ -105,7 +105,7 @@ test('explainDecision: пояснения для каждого решения',
   assert.match(explainDecision({ decision: 'DECREASE', oldWeight: 80, newWeight: 70 }, pe, sets([6, 6]), ex), /снижен с 80 кг до 70 кг/);
   assert.match(explainDecision({ decision: 'KEEP', oldWeight: 80, newWeight: 80 }, pe, sets([10, 9]), ex), /в пределах диапазона 8–12/);
   assert.match(explainDecision({ decision: 'KEEP', oldWeight: 80, newWeight: 80 }, pe, sets([7, 9]), ex), /будет снижен/);
-  assert.match(explainDecision({ decision: 'KEEP', oldWeight: 20, newWeight: 20 }, pe, sets([12, 12]), ex), /превышает 10 %/);
+  assert.match(explainDecision({ decision: 'KEEP', oldWeight: 20, newWeight: 20 }, pe, sets([12, 12]), ex), /допустимую интенсивность/);
   assert.match(explainDecision({ decision: 'INCREASE', oldWeight: 0, newWeight: 0 }, pe, sets([12, 12]), { weightStep: 0 }), /увеличьте число повторений/);
 });
 
