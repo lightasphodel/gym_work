@@ -1,0 +1,10 @@
+<%#
+  Ошибка при обработке запроса страницы (400, 409, 413, 500 …).
+  status — код ответа, message — сообщение для пользователя (без внутренних подробностей).
+-%>
+      <p class="status-page__code"><%= status %></p>
+      <h1 class="page__title"><%= status >= 500 ? 'Ошибка сервера' : 'Запрос не выполнен' %></h1>
+      <p class="page__intro"><%= message %></p>
+      <div class="button-row">
+        <a class="button button--primary" href="/">Перейти на главную страницу</a>
+      </div>

@@ -413,3 +413,28 @@ export function parseProgressQuery(q, today) {
   }
   return { data: { exerciseId, from, to }, errors };
 }
+
+// ---------- Этап 11: журнал тренировок ----------
+
+/**
+ * Проверка исправленного подхода (ФТ-17): вес и повторения из формы журнала.
+ * @param {Record<string, unknown>} body weight, reps
+ * @returns {{data: {weight: number, reps: number}, errors: string[]}}
+ */
+export function parseSetEdit(body) {
+  const errors = [];
+  const weight = toNumber(body.weight);
+  const reps = toNumber(body.reps);
+  const [wMin, wMax] = SET_LIMITS.weight;
+  const [rMin, rMax] = SET_LIMITS.reps;
+  if (weight === null || weight < wMin || weight > wMax || !hasTwoDecimals(weight)) {
+    errors.push(`Вес — неотрицательное число до ${String(wMax).replace('.', ',')} кг, не более двух знаков после запятой`);
+  }
+  if (!Number.isInteger(reps) || reps < rMin || reps > rMax) {
+    errors.push(`Повторения — целое число от ${rMin} до ${rMax}`);
+  }
+  return { data: { weight, reps }, errors };
+}
+
+/** Период журнала по умолчанию, дней. */
+export const JOURNAL_DAYS = 30;

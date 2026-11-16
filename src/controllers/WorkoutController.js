@@ -1,7 +1,7 @@
 import { Program, ProgramDay, ProgramExercise, Exercise, Workout, Decision } from '../models/index.js';
 import { RecordDetector, WeightAdaptationService } from '../services/index.js';
 import { HttpError } from '../middleware/errorHandler.js';
-import { parseWorkoutSets } from '../middleware/validate.js';
+import { parseWorkoutSets, parseSetEdit, parseDate, JOURNAL_DAYS } from '../middleware/validate.js';
 import { recordTypeNames, decisionNames } from '../config/dictionaries.js';
 import { parseId } from '../utils/parseId.js';
 import { loadProgramView } from './programView.js';
@@ -10,6 +10,38 @@ const recordDetector = new RecordDetector();
 const adaptationService = new WeightAdaptationService();
 
 const kg = (value) => `${String(Math.round(Number(value) * 100) / 100).replace('.', ',')} кг`;
+
+const pad = (n) => String(n).padStart(2, '0');
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const shiftDate = (iso, days) => new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
+
+/** Тренировка текущего пользователя из параметра :id; чужая или отсутствующая — 404. */
+async function findOwnWorkout(req) {
+  const id = parseId(req.params.id);
+  const workout = id && (await Workout.findById(id));
+  if (!workout || workout.userId !== req.user.id) throw new HttpError(404, 'Тренировка не найдена');
+  return workout;
+}
+
+/** Подход тренировки из параметра :setId; 404, если в тренировке его нет. */
+function findSet(workout, req) {
+  const setId = parseId(req.params.setId);
+  const set = workout.sets.find((s) => s.id === setId);
+  if (!set) throw new HttpError(404, 'Подход не найден');
+  return set;
+}
+
+/** Возврат в журнал к той же тренировке. */
+function backToJournal(res, req, workout, done) {
+  const from = typeof req.body?.from === 'string' ? parseDate(req.body.from) : null;
+  const to = typeof req.body?.to === 'string' ? parseDate(req.body.to) : null;
+  const query = new URLSearchParams({ done });
+  if (from && to) { query.set('from', from); query.set('to', to); }
+  res.redirect(`/workouts?${query}${workout ? `#workout-${workout.id}` : ''}`);
+}
 
 /**
  * Пояснение решения алгоритма адаптации для пользователя.
@@ -127,5 +159,96 @@ export class WorkoutController {
         };
       }),
     });
+  }
+
+  /**
+   * GET /workouts?from=&to= — журнал тренировок за период (по умолчанию последние 30 дней),
+   * новые сверху; ссылки «Раньше / Позже» сдвигают период.
+   */
+  static async journal(req, res) {
+    const today = localToday();
+    let to = parseDate(req.query.to) ?? today;
+    let from = parseDate(req.query.from) ?? shiftDate(to, -(JOURNAL_DAYS - 1));
+    let error = '';
+    if (from > to) {
+      error = 'Начало периода позже его конца — показаны последние 30 дней';
+      to = today;
+      from = shiftDate(today, -(JOURNAL_DAYS - 1));
+    }
+    const days = Math.round((Date.parse(to) - Date.parse(from)) / 86400000) + 1;
+
+    const [workouts, catalog, active] = await Promise.all([
+      Workout.findByPeriod(req.user.id, from, to),
+      Exercise.search({ includeInactive: true }),
+      Program.findActive(req.user.id),
+    ]);
+    const exerciseName = new Map(catalog.map((e) => [e.id, e.name]));
+    const dayTitles = new Map(
+      (active ? await ProgramDay.findByProgram(active.id) : []).map((d) => [d.id, `День ${d.dayNumber}. ${d.title}`]),
+    );
+    const peByDay = new Map();
+    for (const w of workouts) {
+      if (!peByDay.has(w.programDayId)) {
+        peByDay.set(w.programDayId, new Map((await ProgramExercise.findByDay(w.programDayId)).map((pe) => [pe.id, pe])));
+      }
+    }
+
+    const messages = {
+      updated: 'Подход исправлен',
+      removed: 'Подход удалён',
+      workoutRemoved: 'Тренировка удалена',
+    };
+    res.render('workouts', {
+      title: 'Журнал тренировок',
+      scripts: ['/js/confirm.js'],
+      from,
+      to,
+      earlier: { from: shiftDate(from, -days), to: shiftDate(from, -1) },
+      later: to < today ? { from: shiftDate(to, 1), to: shiftDate(to, days) > today ? today : shiftDate(to, days) } : null,
+      message: messages[req.query.done] ?? '',
+      error,
+      workouts: workouts.slice().reverse().map((w) => {
+        const pes = peByDay.get(w.programDayId);
+        return {
+          id: w.id,
+          date: w.date,
+          dayTitle: dayTitles.get(w.programDayId) ?? 'День прежней программы',
+          tonnage: Number(w.tonnage),
+          isCompleted: w.isCompleted,
+          sets: w.sets.map((s) => ({
+            id: s.id,
+            setNo: s.setNo,
+            weight: Number(s.weight),
+            reps: s.reps,
+            exercise: exerciseName.get(pes?.get(s.programExerciseId)?.exerciseId) ?? 'Упражнение удалено из программы',
+          })),
+        };
+      }),
+    });
+  }
+
+  /** POST /workouts/:id/sets/:setId — исправление веса и повторений подхода (тоннаж пересчитывается). */
+  static async updateSet(req, res) {
+    const workout = await findOwnWorkout(req);
+    const set = findSet(workout, req);
+    const { data, errors } = parseSetEdit(req.body ?? {});
+    if (errors.length > 0) throw new HttpError(400, errors.join('. '));
+    await set.update(data.weight, data.reps);
+    backToJournal(res, req, workout, 'updated');
+  }
+
+  /** POST /workouts/:id/sets/:setId/delete — удаление подхода; единственный подход не удаляется (409). */
+  static async removeSet(req, res) {
+    const workout = await findOwnWorkout(req);
+    const set = findSet(workout, req);
+    await set.remove();
+    backToJournal(res, req, workout, 'removed');
+  }
+
+  /** POST /workouts/:id/delete — удаление тренировки вместе с подходами. */
+  static async removeWorkout(req, res) {
+    const workout = await findOwnWorkout(req);
+    await workout.remove();
+    backToJournal(res, req, null, 'workoutRemoved');
   }
 }

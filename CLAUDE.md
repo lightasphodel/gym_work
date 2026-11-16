@@ -125,7 +125,7 @@ API (JSON): `POST /api/workouts` → 201 `{ tonnage, records, adaptations }`; `G
 - Только классы и переменные из `public/css/styles.css`. Новый цвет или размер — новая переменная в `:root`, не литерал в правиле.
 - Каркас страницы: `header.site-header` (`.brand`, `button.burger[aria-controls="site-nav"]`, `nav.nav#site-nav` с `.nav__link`, активный — `aria-current="page"`) → `main.page > .container` (`h1.page__title`, `p.page__intro`, `.page__content`) → `footer.site-footer`; подключить `/js/nav.js`. На этапе 0.3 шапка и футер переносятся в EJS-partials без изменения разметки.
 - Компоненты: `.button--primary`, `.button--ghost`, `.button-row`; `.hero` (`.hero__title`, `.hero__lead`); `.card` (неоновая полоса сверху); `.day-card` / `.day-card--rest`; `.chips` + `.chip` (вкл. — `aria-pressed="true"` или `.chip-input:checked + .chip`), бейдж — `.chip--static`, `.chip--success`, `.chip--error`; `.result` (`.result__score`); `.gallery` + `.gallery__item`, просмотр — `dialog.viewer`; `.form` / `.form-card` / `.field` (`.field__hint`, `.field__error`), ошибка поля — `aria-invalid="true"`; `.alert--error` / `.alert--success`; `.table-wrap` + `.table`; `.pagination`; `.num-accent`; сетки `.grid-3`, `.grid-4`.
-- Брейкпоинты `1100px` (планшет) и `600px` (смартфон, меню-бургер). Поля контейнера 16 px на всех ширинах (по SVG), контент на 1440 — 1068 px.
+- Брейкпоинты `1100px` (планшет) и `600px` (смартфон). Меню-бургер — с `1100px` (решение 16.11: пунктов меню больше, чем в макете, в строку на 820 они не помещаются). Поля контейнера 16 px на всех ширинах (по SVG), контент на 1440 — 1068 px.
 - Проверка новой страницы — на 1440 / 820 / 375 px.
 
 ## Стиль работы

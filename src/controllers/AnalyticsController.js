@@ -1,5 +1,7 @@
 import { StrengthMetrics, ProgressAnalytics } from '../services/index.js';
+import { Program, Exercise, PersonalRecord, RecordType } from '../models/index.js';
 import { parseOneRm, parseDate, parseProgressQuery } from '../middleware/validate.js';
+import { loadProgramView } from './programView.js';
 
 const metrics = new StrengthMetrics();
 const analytics = new ProgressAnalytics();
@@ -20,6 +22,57 @@ function badRequest(res, errors) {
  * прогресс (ФТ-08), баланс нагрузки (ФТ-10), регулярность (ФТ-11).
  */
 export class AnalyticsController {
+  /**
+   * GET /stats — страница статистики: показатели, графики (данные — /api/stats/*, Chart.js),
+   * календарь регулярности и таблица личных рекордов (рендерится сервером).
+   */
+  static async statsPage(req, res) {
+    const today = localToday();
+    const active = await Program.findActive(req.user.id);
+    // Упражнения для выбора: из активной программы, иначе — весь справочник.
+    let exercises = [];
+    if (active) {
+      const seen = new Set();
+      for (const day of (await loadProgramView(active)).days) {
+        for (const ex of day.exercises) {
+          if (!seen.has(ex.exerciseId)) {
+            seen.add(ex.exerciseId);
+            exercises.push({ id: ex.exerciseId, name: ex.name });
+          }
+        }
+      }
+    }
+    if (exercises.length === 0) {
+      exercises = (await Exercise.search({})).map((e) => ({ id: e.id, name: e.name }));
+    }
+
+    const records = [];
+    for (const ex of exercises) {
+      const best = await PersonalRecord.findBest(req.user.id, ex.id);
+      if (best.length === 0) continue;
+      const value = (type) => best.find((r) => r.type === type)?.value ?? null;
+      records.push({
+        name: ex.name,
+        maxWeight: value(RecordType.MAX_WEIGHT),
+        maxReps: value(RecordType.MAX_REPS),
+        max1rm: value(RecordType.MAX_1RM),
+        maxTonnage: value(RecordType.MAX_TONNAGE),
+        achievedAt: best.map((r) => r.achievedAt).sort().at(-1),
+      });
+    }
+
+    const from = new Date(Date.parse(`${today}T00:00:00Z`) - 89 * 86400000).toISOString().slice(0, 10);
+    res.render('stats', {
+      title: 'Статистика',
+      exercises,
+      records,
+      from,
+      to: today,
+      week: today,
+      scripts: ['/vendor/chart.umd.min.js', '/js/stats.js'],
+    });
+  }
+
   /** GET /tools/1rm?weight=&reps= — калькулятор 1ПМ (работает и без JavaScript). */
   static oneRmPage(req, res) {
     const submitted = req.query.weight !== undefined || req.query.reps !== undefined;

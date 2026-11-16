@@ -1,7 +1,8 @@
 <%#
   Главное меню. Пункты зависят от роли из сессии (currentUser);
   активный пункт отмечается aria-current="page" по адресу страницы (currentPath).
-  Остальные страницы из CLAUDE.md добавляются в меню по мере их появления (этап 11).
+  «Главная» в меню не входит: на стартовую страницу роли ведёт логотип.
+  На ширине ≤ 1100 px меню открывается кнопкой-бургером (nav.js).
 -%>
 <%
   const user = locals.currentUser ?? null;
@@ -11,15 +12,16 @@
       { href: '/register', text: 'Регистрация' },
     ],
     USER: [
-      { href: '/home', text: 'Главная' },
       { href: '/programs', text: 'Программа' },
       { href: '/workouts/new', text: 'Тренировка' },
-      { href: '/profile', text: 'Профиль' },
+      { href: '/workouts', text: 'Журнал' },
+      { href: '/stats', text: 'Статистика' },
       { href: '/exercises', text: 'Упражнения' },
       { href: '/tools/1rm', text: '1ПМ' },
+      { href: '/profile', text: 'Профиль' },
     ],
     ADMIN: [
-      { href: '/admin', text: 'Панель администратора' },
+      { href: '/admin', text: 'Панель' },
       { href: '/admin/users', text: 'Пользователи' },
       { href: '/admin/exercises', text: 'Упражнения' },
       { href: '/admin/templates', text: 'Шаблоны' },

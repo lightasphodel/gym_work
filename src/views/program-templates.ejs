@@ -20,7 +20,7 @@
 <%- include('partials/program-days', { days: t.days }) %>
         <form method="post" action="/programs/templates/<%= t.program.id %>/copy">
           <div class="button-row">
-            <button type="submit" class="button button--primary">Скопировать «<%= t.program.title %>»</button>
+            <button type="submit" class="button button--primary" aria-label="Скопировать шаблон «<%= t.program.title %>»">Скопировать шаблон</button>
           </div>
         </form>
 <% } -%>

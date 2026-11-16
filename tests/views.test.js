@@ -39,9 +39,12 @@ test('nav: гость видит «Вход» и «Регистрация», б�
 test('nav: пользователь видит свои пункты, логин и «Выйти»', async () => {
   const html = await render('partials/nav.ejs', {
     currentUser: { id: 2, login: 'ivan', role: 'USER' },
-    currentPath: '/home',
+    currentPath: '/programs',
   });
-  assert.match(html, /href="\/home" aria-current="page">Главная</);
+  assert.match(html, /href="\/programs" aria-current="page">Программа</);
+  for (const href of ['/workouts/new', '/workouts', '/stats', '/exercises', '/tools/1rm', '/profile']) {
+    assert.match(html, new RegExp(`href="${href}"`), href);
+  }
   assert.match(html, /<span class="nav__user">ivan<\/span>/);
   assert.match(html, /id="logout-button"/);
   assert.doesNotMatch(html, /\/admin/);
@@ -53,8 +56,10 @@ test('nav: администратор видит панель администр
     currentUser: { id: 1, login: 'admin', role: 'ADMIN' },
     currentPath: '/admin',
   });
-  assert.match(html, /href="\/admin" aria-current="page">Панель администратора</);
+  assert.match(html, /href="\/admin" aria-current="page">Панель</);
+  assert.match(html, /href="\/admin\/templates">Шаблоны</);
   assert.doesNotMatch(html, /href="\/home"/);
+  assert.doesNotMatch(html, /href="\/stats"/);
 });
 
 test('nav: логин экранируется', async () => {
@@ -101,7 +106,7 @@ test('nav: на /admin/users активен только пункт «Польз
     currentPath: '/admin/users',
   });
   assert.match(html, /href="\/admin\/users" aria-current="page">Пользователи</);
-  assert.match(html, /href="\/admin">Панель администратора</);
+  assert.match(html, /href="\/admin">Панель</);
   assert.equal(html.match(/aria-current/g).length, 1);
 });
 

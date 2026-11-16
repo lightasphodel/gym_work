@@ -1,0 +1,150 @@
+<%#
+  Статистика (ФТ-07, ФТ-08, ФТ-10, ФТ-11, ФТ-09): показатели, графики Chart.js,
+  календарь регулярности — данные загружает /js/stats.js из /api/stats/*;
+  таблица личных рекордов рендерится сервером. Под каждым графиком — таблица данных.
+-%>
+      <h1 class="page__title">Статистика</h1>
+      <p class="page__intro">Динамика рабочего веса и расчётного 1ПМ, тоннаж, баланс нагрузки по группам мышц и регулярность занятий.</p>
+      <div class="page__content">
+        <div class="alert alert--error" id="stats-error" role="alert" hidden></div>
+
+        <div class="grid-3" aria-label="Показатели">
+          <section class="card" aria-labelledby="kpi-tonnage-title">
+            <h2 id="kpi-tonnage-title">Тоннаж</h2>
+            <dl class="details details--stack">
+              <dt>Последняя тренировка</dt><dd><span class="num-accent" id="kpi-workout">—</span></dd>
+              <dt>Эта неделя</dt><dd><span class="num-accent" id="kpi-week">—</span></dd>
+              <dt>Этот месяц</dt><dd><span class="num-accent" id="kpi-month">—</span></dd>
+            </dl>
+          </section>
+          <section class="card" aria-labelledby="kpi-regularity-title">
+            <h2 id="kpi-regularity-title">Регулярность</h2>
+            <dl class="details details--stack">
+              <dt>Серия недель с выполненным планом</dt><dd><span class="num-accent" id="kpi-streak">—</span></dd>
+              <dt>Выполнение программы</dt><dd><span class="num-accent" id="kpi-completion">—</span></dd>
+              <dt>План</dt><dd id="kpi-plan">—</dd>
+            </dl>
+          </section>
+          <section class="card" aria-labelledby="kpi-tools-title">
+            <h2 id="kpi-tools-title">Расчёт 1ПМ</h2>
+            <p>Оценка одноповторного максимума по весу и числу повторений.</p>
+            <a class="button button--ghost" href="/tools/1rm">Калькулятор 1ПМ</a>
+          </section>
+        </div>
+
+        <section class="card" aria-labelledby="progress-title">
+          <h2 id="progress-title">Силовой прогресс</h2>
+          <form id="progress-form" novalidate>
+            <div class="grid-3">
+              <div class="field">
+                <label for="progress-exercise">Упражнение</label>
+                <select id="progress-exercise" name="exerciseId">
+<% for (const ex of exercises) { -%>
+                  <option value="<%= ex.id %>"><%= ex.name %></option>
+<% } -%>
+                </select>
+              </div>
+              <div class="field">
+                <label for="progress-from">С</label>
+                <input type="date" id="progress-from" name="from" value="<%= from %>" required>
+              </div>
+              <div class="field">
+                <label for="progress-to">По</label>
+                <input type="date" id="progress-to" name="to" value="<%= to %>" required>
+              </div>
+            </div>
+            <button type="submit" class="button button--primary">Показать</button>
+          </form>
+          <p class="text-muted" id="progress-empty" hidden>За выбранный период тренировок с этим упражнением нет.</p>
+          <h3>Рабочий вес и расчётный 1ПМ, кг</h3>
+          <div class="chart">
+            <canvas id="chart-weight" role="img" aria-label="Линейный график рабочего веса и расчётного 1ПМ по датам тренировок"></canvas>
+          </div>
+          <h3>Тоннаж упражнения, кг</h3>
+          <div class="chart">
+            <canvas id="chart-tonnage" role="img" aria-label="Столбчатый график тоннажа упражнения по датам тренировок"></canvas>
+          </div>
+          <details class="chart-data">
+            <summary>Таблица данных</summary>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th scope="col">Дата</th><th scope="col" class="is-numeric">Рабочий вес, кг</th><th scope="col" class="is-numeric">1ПМ, кг</th><th scope="col" class="is-numeric">Тоннаж, кг</th></tr></thead>
+                <tbody id="progress-table"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+
+        <section class="card" aria-labelledby="balance-title">
+          <h2 id="balance-title">Баланс нагрузки</h2>
+          <form id="balance-form" novalidate>
+            <div class="grid-3">
+              <div class="field">
+                <label for="balance-week">Неделя, содержащая дату</label>
+                <input type="date" id="balance-week" name="week" value="<%= week %>" required>
+                <span class="field__hint" id="balance-range"></span>
+              </div>
+            </div>
+            <button type="submit" class="button button--primary">Показать</button>
+          </form>
+          <div id="balance-warnings"></div>
+          <h3>Рабочих подходов за неделю по группам мышц</h3>
+          <div class="chart chart--tall">
+            <canvas id="chart-balance" role="img" aria-label="Горизонтальный столбчатый график числа рабочих подходов по группам мышц за неделю"></canvas>
+          </div>
+          <details class="chart-data">
+            <summary>Мышцы-антагонисты</summary>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th scope="col">Пара</th><th scope="col" class="is-numeric">Подходов</th><th scope="col" class="is-numeric">Соотношение</th><th scope="col">Оценка</th></tr></thead>
+                <tbody id="balance-table"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+
+        <section class="card" aria-labelledby="calendar-title">
+          <h2 id="calendar-title">Календарь тренировок</h2>
+          <p class="caption">Последние 12 недель.</p>
+          <div class="calendar" id="calendar" role="grid" aria-label="Календарь тренировок за 12 недель"></div>
+          <ul class="legend">
+            <li><span class="calendar__day calendar__day--done" aria-hidden="true">✓</span>тренировка завершена</li>
+            <li><span class="calendar__day calendar__day--partial" aria-hidden="true">•</span>внесена не полностью</li>
+            <li><span class="calendar__day" aria-hidden="true"></span>без тренировки</li>
+          </ul>
+        </section>
+
+        <section class="card" aria-labelledby="records-title">
+          <h2 id="records-title">Личные рекорды</h2>
+<% if (records.length === 0) { -%>
+          <p class="text-muted">Рекордов пока нет — они появятся после первой сохранённой тренировки.</p>
+<% } else { -%>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Упражнение</th>
+                  <th scope="col" class="is-numeric">Вес, кг</th>
+                  <th scope="col" class="is-numeric">Повторений</th>
+                  <th scope="col" class="is-numeric">1ПМ, кг</th>
+                  <th scope="col" class="is-numeric">Тоннаж, кг</th>
+                  <th scope="col">Последний рекорд</th>
+                </tr>
+              </thead>
+              <tbody>
+<% for (const r of records) { -%>
+                <tr>
+                  <td><%= r.name %></td>
+                  <td class="is-numeric"><%= r.maxWeight === null ? '—' : formatNumber(r.maxWeight) %></td>
+                  <td class="is-numeric"><%= r.maxReps === null ? '—' : formatNumber(r.maxReps) %></td>
+                  <td class="is-numeric"><%= r.max1rm === null ? '—' : formatNumber(r.max1rm) %></td>
+                  <td class="is-numeric"><%= r.maxTonnage === null ? '—' : formatNumber(r.maxTonnage) %></td>
+                  <td><%= formatDate(r.achievedAt) %></td>
+                </tr>
+<% } -%>
+              </tbody>
+            </table>
+          </div>
+<% } -%>
+        </section>
+      </div>

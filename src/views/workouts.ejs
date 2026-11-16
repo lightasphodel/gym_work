@@ -1,0 +1,102 @@
+<%#
+  Журнал тренировок (ФТ-17): тренировки за период, исправление и удаление подходов,
+  удаление тренировки. Поля строки таблицы привязаны к скрытой форме атрибутом form
+  (форма не может обернуть строку таблицы). Удаление подтверждается (/js/confirm.js).
+-%>
+      <h1 class="page__title">Журнал тренировок</h1>
+      <p class="page__intro">Тренировки за период с <%= formatDate(from) %> по <%= formatDate(to) %>. Исправление записей пересчитывает тоннаж тренировки, но не меняет рабочие веса программы и личные рекорды.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (error) { -%>
+        <div class="alert alert--error" role="alert"><%= error %></div>
+<% } -%>
+        <form class="card" method="get" action="/workouts" aria-label="Период журнала">
+          <div class="grid-3">
+            <div class="field">
+              <label for="journal-from">С</label>
+              <input type="date" id="journal-from" name="from" value="<%= from %>" required>
+            </div>
+            <div class="field">
+              <label for="journal-to">По</label>
+              <input type="date" id="journal-to" name="to" value="<%= to %>" required>
+            </div>
+          </div>
+          <div class="button-row">
+            <button type="submit" class="button button--primary">Показать</button>
+            <a class="button button--ghost" href="/workouts/new">Новая тренировка</a>
+          </div>
+        </form>
+
+<% if (workouts.length === 0) { -%>
+        <p class="text-muted">За этот период тренировок нет.</p>
+<% } -%>
+<% for (const w of workouts) { -%>
+        <section class="card" id="workout-<%= w.id %>" aria-labelledby="workout-title-<%= w.id %>">
+          <h2 id="workout-title-<%= w.id %>"><%= formatDate(w.date) %> · <%= w.dayTitle %></h2>
+          <div class="chips">
+            <span class="chip chip--static<%= w.isCompleted ? ' chip--success' : '' %>"><%= w.isCompleted ? 'Завершена' : 'Не завершена' %></span>
+            <span class="chip chip--static">Тоннаж: <%= formatNumber(w.tonnage) %> кг</span>
+            <span class="chip chip--static">Подходов: <%= w.sets.length %></span>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Упражнение</th>
+                  <th scope="col">Подход</th>
+                  <th scope="col">Вес, кг</th>
+                  <th scope="col">Повторения</th>
+                  <th scope="col">Действие</th>
+                </tr>
+              </thead>
+              <tbody>
+<% for (const s of w.sets) { const f = `set-${s.id}`; -%>
+                <tr>
+                  <td><%= s.exercise %></td>
+                  <td><%= s.setNo %></td>
+                  <td>
+                    <label class="visually-hidden" for="w-<%= s.id %>"><%= s.exercise %>, подход <%= s.setNo %>: вес</label>
+                    <input type="number" id="w-<%= s.id %>" name="weight" form="<%= f %>" min="0" max="999.99" step="0.01" inputmode="decimal" required value="<%= s.weight %>">
+                  </td>
+                  <td>
+                    <label class="visually-hidden" for="r-<%= s.id %>"><%= s.exercise %>, подход <%= s.setNo %>: повторения</label>
+                    <input type="number" id="r-<%= s.id %>" name="reps" form="<%= f %>" min="1" max="50" step="1" inputmode="numeric" required value="<%= s.reps %>">
+                  </td>
+                  <td>
+                    <div class="button-row">
+                      <button type="submit" class="button button--ghost" form="<%= f %>">Сохранить</button>
+                      <button type="submit" class="button button--ghost" form="<%= f %>-delete">Удалить</button>
+                    </div>
+                  </td>
+                </tr>
+<% } -%>
+              </tbody>
+            </table>
+          </div>
+<% for (const s of w.sets) { -%>
+          <form id="set-<%= s.id %>" method="post" action="/workouts/<%= w.id %>/sets/<%= s.id %>" hidden>
+            <input type="hidden" name="from" value="<%= from %>"><input type="hidden" name="to" value="<%= to %>">
+          </form>
+          <form id="set-<%= s.id %>-delete" method="post" action="/workouts/<%= w.id %>/sets/<%= s.id %>/delete" hidden
+                data-confirm="Удалить подход <%= s.setNo %> (<%= s.exercise %>)?">
+            <input type="hidden" name="from" value="<%= from %>"><input type="hidden" name="to" value="<%= to %>">
+          </form>
+<% } -%>
+          <form method="post" action="/workouts/<%= w.id %>/delete" data-confirm="Удалить тренировку <%= formatDate(w.date) %> вместе со всеми подходами?">
+            <input type="hidden" name="from" value="<%= from %>"><input type="hidden" name="to" value="<%= to %>">
+            <div class="button-row">
+              <button type="submit" class="button button--ghost">Удалить тренировку</button>
+            </div>
+          </form>
+        </section>
+<% } -%>
+
+        <nav class="pagination" aria-label="Другие периоды">
+          <a class="button button--ghost" href="/workouts?from=<%= earlier.from %>&amp;to=<%= earlier.to %>">← Раньше</a>
+<% if (later) { -%>
+          <a class="button button--ghost" href="/workouts?from=<%= later.from %>&amp;to=<%= later.to %>">Позже →</a>
+<% } -%>
+        </nav>
+      </div>

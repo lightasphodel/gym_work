@@ -40,5 +40,9 @@ export function errorHandler(err, req, res, next) {
   if (status === 404) {
     return notFound(req, res);
   }
-  res.status(status).type('text/plain; charset=utf-8').send(message);
+  // Страница ошибки в общем оформлении; если отрисовка не удалась — простой текст.
+  res.status(status).render('error', { title: 'Ошибка', status, message, pageClass: 'page--glow' }, (renderErr, html) => {
+    if (renderErr) return res.type('text/plain; charset=utf-8').send(message);
+    res.send(html);
+  });
 }

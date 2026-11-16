@@ -79,6 +79,11 @@
   --day-pad: 17px;
   --btn-row-gap: 9px;
   --chip-gap: 4px;
+  --chart-1: #FF2E3D;            /* ряд 1 графика (= --neon); пара с --chart-2 проверена: CVD ΔE 25, контраст ≥ 3:1 */
+  --chart-2: #3987E5;            /* ряд 2 графика — холодный оттенок к неону */
+  --chart-h: 280px;              /* высота графика */
+  --chart-h-tall: 400px;         /* высота горизонтального графика баланса */
+  --calendar-cell: 34px;         /* ячейка календаря регулярности */
   --table-input-min: 76px;       /* поле ввода в ячейке таблицы (подходы, повторения, вес) */
   --table-select-min: 220px;     /* выбор упражнения в ячейке таблицы */
   --transition: 0.15s;
@@ -203,7 +208,7 @@ a:hover {
 
 /* Блоки содержимого страницы (карточки, формы, таблицы) идут с отступом сетки */
 .page__content > * + *,
-.page__content > form > :not([type="hidden"]) + * {
+.page__content > form:not(.card) > :not([type="hidden"]) + * {
   margin-top: var(--gap);
 }
 
@@ -295,7 +300,14 @@ a:hover {
   display: none;
 }
 
-/* Кнопка-бургер (только смартфон) */
+/* Логин в строке меню на десктопе не показывается (не помещается): он виден в выпадающем меню */
+@media (min-width: 1101px) {
+  .nav__user {
+    display: none;
+  }
+}
+
+/* Кнопка-бургер (планшет и смартфон, ≤ 1100 px) */
 .burger {
   display: none;
   width: 41px;
@@ -514,6 +526,35 @@ a:hover {
 .details dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* Список показателей: подпись над значением (длинные подписи не сжимают значения) */
+.details--stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.details--stack dd + dt {
+  margin-top: 12px;
+}
+
+/* Подзаголовок внутри карточки после формы или графика */
+.card > * + h3 {
+  margin-top: var(--gap);
+}
+
+/* Содержимое карточки после формы (результат, предупреждения) */
+.card > form + * {
+  margin-top: var(--gap);
+}
+
+/* Таблица после бейджей; видимая форма с кнопками после таблицы (скрытые формы пропускаются) */
+.chips + * {
+  margin-top: 16px;
+}
+
+.card > .table-wrap ~ form:not([hidden]) {
+  margin-top: var(--gap);
 }
 
 /* ---------- Чипы (переключатели, бейджи) ---------- */
@@ -838,6 +879,9 @@ input[type="radio"] {
 /* ---------- Таблицы ---------- */
 
 .table-wrap {
+  /* relative: скрытые подписи полей (.visually-hidden, absolute) в ячейках
+     остаются внутри прокрутки и не расширяют страницу */
+  position: relative;
   overflow-x: auto;
   background: var(--card);
   border: 1px solid var(--steel);
@@ -896,6 +940,111 @@ input[type="radio"] {
   margin-top: var(--gap);
 }
 
+/* ---------- Графики и календарь (страница статистики) ---------- */
+
+/* Контейнер графика Chart.js: высота задаётся здесь, canvas растягивается по нему */
+.chart {
+  position: relative;
+  height: var(--chart-h);
+}
+
+.chart--tall {
+  height: var(--chart-h-tall);
+}
+
+/* Таблица данных под графиком (текстовая альтернатива) */
+.chart-data summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.chart-data[open] summary {
+  margin-bottom: 12px;
+}
+
+* + .chart,
+.chart + .chart-data,
+.chart-data + h3 {
+  margin-top: 16px;
+}
+
+/* Календарь регулярности: строки — недели, столбцы — дни (пн–вс) */
+.calendar {
+  display: grid;
+  grid-template-columns: auto repeat(7, var(--calendar-cell));
+  gap: 4px;
+  align-items: center;
+  justify-content: start;
+  font-size: var(--fs-small);
+}
+
+.calendar__head,
+.calendar__week {
+  color: var(--muted);
+  text-align: center;
+}
+
+.calendar__week {
+  padding-right: 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.calendar__day {
+  display: grid;
+  place-items: center;
+  width: var(--calendar-cell);
+  height: var(--calendar-cell);
+  border: 1px solid var(--steel);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* Тренировка завершена (статус «выполнено» — с отметкой ✓, не только цветом) */
+.calendar__day--done {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* Тренировка внесена не полностью (отметка •) */
+.calendar__day--partial {
+  border-color: var(--chart-2);
+  color: var(--chart-2);
+}
+
+.calendar__day--today {
+  outline: 2px solid var(--neon);
+  outline-offset: 1px;
+}
+
+.calendar__day--future {
+  border-style: dashed;
+  background: transparent;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.legend .calendar__day {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  vertical-align: middle;
+  font-size: var(--fs-small);
+}
+
 /* ---------- Пагинация ---------- */
 
 .pagination {
@@ -947,40 +1096,7 @@ input[type="radio"] {
     --hero-top: 40px;            /* по макету 820/375 H1 hero начинается ~34–40 px под шапкой */
   }
 
-  .grid-3,
-  .grid-4,
-  .gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .auth {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-  }
-
-  .auth .hero__title {
-    max-width: 640px;
-  }
-
-  .auth .form-card {
-    width: 100%;
-    margin: 0 auto;
-  }
-}
-
-/* ---------- Смартфон (≤ 600 px): 4 колонки, меню-бургер ---------- */
-
-@media (max-width: 600px) {
-  :root {
-    --fs-hero: 30.4px;
-  }
-
-  .grid-3,
-  .grid-4,
-  .gallery {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+  /* Меню-бургер: на планшете и смартфоне (пунктов меню больше, чем помещается в строку) */
   .burger {
     display: inline-flex;
   }
@@ -1023,6 +1139,40 @@ input[type="radio"] {
   .nav__user {
     color: var(--muted);
     font-size: var(--fs-caption);
+  }
+
+  .grid-3,
+  .grid-4,
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  .auth .hero__title {
+    max-width: 640px;
+  }
+
+  .auth .form-card {
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+/* ---------- Смартфон (≤ 600 px): 4 колонки, меню-бургер ---------- */
+
+@media (max-width: 600px) {
+  :root {
+    --fs-hero: 30.4px;
+  }
+
+  .grid-3,
+  .grid-4,
+  .gallery {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .details {

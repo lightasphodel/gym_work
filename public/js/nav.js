@@ -1,5 +1,5 @@
 /**
- * Меню-бургер шапки (смартфон, ширина ≤ 600 px).
+ * Меню-бургер шапки (планшет и смартфон, ширина ≤ 1100 px).
  * Состояние хранится в aria-expanded кнопки; видимость меню задаёт CSS.
  */
 const burger = document.querySelector('.burger');
@@ -28,8 +28,8 @@ if (burger && nav) {
     if (!event.target.closest('.site-header')) setOpen(false);
   });
 
-  // При переходе к планшетной ширине меню снова показывается в строку.
-  window.matchMedia('(min-width: 601px)').addEventListener('change', (e) => {
+  // При переходе к десктопной ширине меню снова показывается в строку.
+  window.matchMedia('(min-width: 1101px)').addEventListener('change', (e) => {
     if (e.matches) setOpen(false);
   });
 }

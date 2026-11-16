@@ -36,9 +36,14 @@ pageRoutes.post('/programs/:id/exercises/:peId/replace', user, ProgramController
 pageRoutes.post('/programs/:id/activate', user, ProgramController.activate);
 pageRoutes.post('/programs/:id/archive', user, ProgramController.archive);
 
-// Тренировка (ФТ-17) и калькулятор 1ПМ (ФТ-06)
+// Тренировка и журнал (ФТ-17), калькулятор 1ПМ (ФТ-06)
 pageRoutes.get('/workouts/new', user, WorkoutController.newPage);
+pageRoutes.get('/workouts', user, WorkoutController.journal);
+pageRoutes.post('/workouts/:id/sets/:setId', user, WorkoutController.updateSet);
+pageRoutes.post('/workouts/:id/sets/:setId/delete', user, WorkoutController.removeSet);
+pageRoutes.post('/workouts/:id/delete', user, WorkoutController.removeWorkout);
 pageRoutes.get('/tools/1rm', requireAuth, AnalyticsController.oneRmPage);
+pageRoutes.get('/stats', user, AnalyticsController.statsPage);
 
 // Справочник упражнений — чтение (обе роли)
 pageRoutes.get('/exercises', requireAuth, ExerciseController.list);
