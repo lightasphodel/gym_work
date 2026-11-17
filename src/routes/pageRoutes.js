@@ -74,3 +74,8 @@ pageRoutes.post('/admin/templates/:id', admin, AdminController.templateUpdate);
 pageRoutes.post('/admin/templates/:id/days/:dayId', admin, AdminController.templateSaveDay);
 pageRoutes.post('/admin/templates/:id/publish', admin, AdminController.templatePublish);
 pageRoutes.post('/admin/templates/:id/unpublish', admin, AdminController.templateUnpublish);
+
+// Администратор: резервное копирование (ФТ-15)
+pageRoutes.get('/admin/backups', admin, AdminController.backups);
+pageRoutes.post('/admin/backups', admin, AdminController.backupCreate);
+pageRoutes.post('/admin/backups/restore', admin, AdminController.backupRestore);

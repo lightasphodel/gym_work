@@ -15,14 +15,18 @@
     "db:init": "node scripts/init-db.js",
     "db:seed": "node scripts/seed.js",
     "admin:create": "node scripts/create-admin.js",
+    "cert": "node scripts/cert.js",
     "vendor": "node -e \"const fs=require('node:fs');fs.mkdirSync('public/vendor',{recursive:true});fs.copyFileSync('node_modules/chart.js/dist/chart.umd.min.js','public/vendor/chart.umd.min.js');fs.copyFileSync('node_modules/chart.js/LICENSE.md','public/vendor/chart.js-LICENSE.md')\""
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "connect-pg-simple": "^10.0.0",
     "ejs": "^7.0.2",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "helmet": "^8.3.0",
     "multer": "^2.5.0",
+    "node-cron": "^4.6.0",
     "pg": "^8.13.0"
   },
   "devDependencies": {

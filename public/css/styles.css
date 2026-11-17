@@ -932,6 +932,12 @@ input[type="radio"] {
   flex-wrap: nowrap;
 }
 
+/* Флажки и числа в ячейках таблиц не переносятся по словам */
+.table .check,
+.table .is-numeric {
+  white-space: nowrap;
+}
+
 /* Кнопки под таблицей или сеткой внутри формы */
 .table-wrap + .button-row,
 .card > .button-row,

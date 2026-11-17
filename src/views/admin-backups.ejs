@@ -1,0 +1,101 @@
+<%#
+  Резервное копирование (ФТ-15): создание копии по запросу, список копий с восстановлением
+  (подтверждение флажком и диалогом confirm.js), журнал операций, расписание.
+-%>
+      <h1 class="page__title">Резервные копии</h1>
+      <p class="page__intro">Копия базы данных создаётся утилитой pg_dump и хранится в зашифрованном виде (AES-256-GCM). Автоматическое копирование — <%= schedule %>.</p>
+      <div class="page__content">
+<% if (message) { -%>
+        <div class="alert alert--success" role="status"><%= message %></div>
+<% } -%>
+<% if (error) { -%>
+        <div class="alert alert--error" role="alert"><%= error %></div>
+<% } -%>
+<% if (!keyConfigured) { -%>
+        <div class="alert alert--error" role="alert">Не задан ключ шифрования BACKUP_KEY в файле .env — копии не создаются.</div>
+<% } -%>
+
+        <section class="card" aria-labelledby="backup-create-title">
+          <h2 id="backup-create-title">Новая копия</h2>
+          <p>Копия включает все данные приложения, кроме сессий пользователей. Создание занимает несколько секунд.</p>
+          <form method="post" action="/admin/backups">
+            <button type="submit" class="button button--primary"<%- keyConfigured ? '' : ' disabled' %>>Создать резервную копию</button>
+          </form>
+        </section>
+
+        <section class="card" aria-labelledby="backup-list-title">
+          <h2 id="backup-list-title">Доступные копии</h2>
+<% if (backups.length === 0) { -%>
+          <p class="text-muted">Копий пока нет.</p>
+<% } else { -%>
+          <p class="caption">Восстановление заменяет все текущие данные данными копии. Выполняется в одной транзакции: при ошибке данные не меняются.</p>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Файл</th>
+                  <th scope="col">Создана</th>
+                  <th scope="col">Вид</th>
+                  <th scope="col">Администратор</th>
+                  <th scope="col" class="is-numeric">Размер</th>
+                  <th scope="col">Восстановление</th>
+                </tr>
+              </thead>
+              <tbody>
+<% backups.forEach((b, i) => { -%>
+                <tr>
+                  <td><%= b.fileName %></td>
+                  <td><%= formatDate(b.createdAt) %> <%= new Date(b.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) %></td>
+                  <td><%= b.typeName %></td>
+                  <td><%= b.admin %></td>
+                  <td class="is-numeric"><%= b.size %></td>
+                  <td>
+                    <form method="post" action="/admin/backups/restore"
+                          data-confirm="Восстановить базу данных из копии <%= b.fileName %>? Текущие данные будут заменены.">
+                      <input type="hidden" name="fileName" value="<%= b.fileName %>">
+                      <div class="button-row">
+                        <label class="check"><input type="checkbox" name="confirm" value="yes" required> данные будут заменены</label>
+                        <button type="submit" class="button button--ghost" aria-label="Восстановить из <%= b.fileName %>">Восстановить</button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+<% }) -%>
+              </tbody>
+            </table>
+          </div>
+<% } -%>
+        </section>
+
+        <section class="card" aria-labelledby="backup-journal-title">
+          <h2 id="backup-journal-title">Журнал операций</h2>
+<% if (journal.length === 0) { -%>
+          <p class="text-muted">Операций ещё не было.</p>
+<% } else { -%>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Дата</th>
+                  <th scope="col">Операция</th>
+                  <th scope="col">Файл</th>
+                  <th scope="col">Администратор</th>
+                  <th scope="col">Результат</th>
+                </tr>
+              </thead>
+              <tbody>
+<% for (const l of journal) { -%>
+                <tr>
+                  <td><%= formatDate(l.createdAt) %> <%= new Date(l.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) %></td>
+                  <td><%= l.typeName %></td>
+                  <td><%= l.fileName %></td>
+                  <td><%= l.admin %></td>
+                  <td><span class="chip chip--static <%= l.ok ? 'chip--success' : 'chip--error' %>"><%= l.ok ? 'Успешно' : 'Ошибка' %></span></td>
+                </tr>
+<% } -%>
+              </tbody>
+            </table>
+          </div>
+<% } -%>
+        </section>
+      </div>

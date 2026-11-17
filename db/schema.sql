@@ -19,6 +19,7 @@ DROP TABLE IF EXISTS exercise_media    CASCADE;
 DROP TABLE IF EXISTS exercises         CASCADE;
 DROP TABLE IF EXISTS muscle_groups     CASCADE;
 DROP TABLE IF EXISTS backup_logs       CASCADE;
+DROP TABLE IF EXISTS session           CASCADE;
 DROP TABLE IF EXISTS training_profiles CASCADE;
 DROP TABLE IF EXISTS users             CASCADE;
 
@@ -277,6 +278,19 @@ CREATE TABLE personal_records (
     CONSTRAINT personal_records_exercise_fk FOREIGN KEY (exercise_id)
         REFERENCES exercises (id) ON DELETE RESTRICT
 );
+
+-- ---------------------------------------------------------------------
+-- session – сессии пользователей (хранилище connect-pg-simple для express-session).
+-- Служебная таблица веб-сервера, на физической модели (рис. 1.7) не показывается;
+-- в резервную копию не входит (pg_dump --exclude-table=session).
+-- ---------------------------------------------------------------------
+CREATE TABLE session (
+    sid    VARCHAR      NOT NULL,
+    sess   JSON         NOT NULL,
+    expire TIMESTAMP(6) NOT NULL,
+    CONSTRAINT session_pkey PRIMARY KEY (sid)
+);
+CREATE INDEX session_expire_idx ON session (expire);
 
 -- ---------------------------------------------------------------------
 -- Индексы по внешним ключам и частым условиям выборки

@@ -36,6 +36,8 @@ export const config = Object.freeze({
 
   server: Object.freeze({
     port: Number(optional('PORT', '3000')),
+    // Порт HTTP-сервера, перенаправляющего на HTTPS (используется только при заданных TLS-путях).
+    httpPort: Number(optional('HTTP_PORT', '3000')),
     tlsKeyPath: resolveFromRoot(optional('TLS_KEY_PATH')),
     tlsCertPath: resolveFromRoot(optional('TLS_CERT_PATH')),
   }),
@@ -55,7 +57,8 @@ export const config = Object.freeze({
   }),
 
   security: Object.freeze({
-    bcryptRounds: Number(optional('BCRYPT_ROUNDS', '12')),
+    // Cost-фактор bcrypt: не ниже 12, даже если в .env указано меньше.
+    bcryptRounds: Math.max(12, Number(optional('BCRYPT_ROUNDS', '12')) || 12),
     // Требования к учётным данным (ФТ-01)
     loginPattern: /^[A-Za-z0-9_.-]{3,50}$/,
     emailMaxLength: 100,
@@ -66,6 +69,10 @@ export const config = Object.freeze({
   backup: Object.freeze({
     dir: resolveFromRoot(optional('BACKUP_DIR', './backups')),
     pgBinDir: optional('PG_BIN_DIR'),
+    // Расписание резервного копирования (cron: минута час день месяц день_недели), по умолчанию — 03:00 ежедневно.
+    schedule: optional('BACKUP_SCHEDULE', '0 3 * * *'),
+    // Ключ AES-256-GCM для шифрования файлов копий: 64 шестнадцатеричных символа (32 байта).
+    key: optional('BACKUP_KEY'),
   }),
 
   paths: Object.freeze({

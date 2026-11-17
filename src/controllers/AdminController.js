@@ -1,4 +1,8 @@
-import { User, Exercise, ExerciseMedia, MuscleGroup, Program, ProgramStatus } from '../models/index.js';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import { User, Exercise, ExerciseMedia, MuscleGroup, Program, ProgramStatus, BackupLog } from '../models/index.js';
+import { BackupService, BackupType, BackupStatus } from '../services/BackupService.js';
+import { config } from '../config/config.js';
 import { HttpError } from '../middleware/errorHandler.js';
 import { parseExerciseForm, parseProgramMeta, parseTemplateForm, TEMPLATE_LIMITS } from '../middleware/validate.js';
 import { parseId } from '../utils/parseId.js';
@@ -158,6 +162,63 @@ async function renderTemplate(req, res, program, extra = {}) {
     ...extra,
   });
 }
+
+// ---------- Резервное копирование (ФТ-15) ----------
+
+const backupService = new BackupService();
+
+const BACKUP_TYPE_NAMES = Object.freeze({
+  [BackupType.MANUAL]: 'По запросу',
+  [BackupType.SCHEDULED]: 'По расписанию',
+  [BackupType.RESTORE]: 'Восстановление',
+});
+
+/** Размер файла для таблицы: КБ или МБ с десятичной запятой. */
+function fileSize(bytes) {
+  if (bytes === null) return '—';
+  const [value, unit] = bytes >= 1024 * 1024 ? [bytes / 1024 / 1024, 'МБ'] : [bytes / 1024, 'КБ'];
+  return `${String(Math.round(value * 10) / 10).replace('.', ',')} ${unit}`;
+}
+
+/** Расписание cron в виде текста для простых ежедневных выражений «м ч * * *». */
+function scheduleText(expr) {
+  const m = /^(\d{1,2}) (\d{1,2}) \* \* \*$/.exec(expr.trim());
+  return m ? `ежедневно в ${m[2].padStart(2, '0')}:${m[1].padStart(2, '0')}` : `по выражению cron «${expr}»`;
+}
+
+async function renderBackups(req, res, extra = {}) {
+  const [available, journal, users] = await Promise.all([
+    backupService.listBackups(),
+    BackupLog.findAll(),
+    User.findAll(),
+  ]);
+  const loginById = new Map(users.map((u) => [u.id, u.login]));
+  const backups = [];
+  for (const b of available) {
+    const stat = await fsp.stat(path.join(config.backup.dir, b.fileName)).catch(() => null);
+    backups.push({ ...toPlain(b), admin: loginById.get(b.adminId) ?? '—', size: fileSize(stat?.size ?? null),
+      typeName: BACKUP_TYPE_NAMES[b.type] ?? b.type });
+  }
+  const file = typeof req.query.file === 'string' ? req.query.file : '';
+  let message = '';
+  if (req.query.done === 'created' && file) message = `Создана резервная копия ${file}`;
+  else if (req.query.done === 'restored' && file) message = `База данных восстановлена из копии ${file}`;
+  res.render('admin-backups', {
+    title: 'Резервные копии',
+    backups,
+    journal: journal.slice(0, 50).map((l) => ({ ...toPlain(l), admin: loginById.get(l.adminId) ?? '—',
+      typeName: BACKUP_TYPE_NAMES[l.type] ?? l.type, ok: l.status === BackupStatus.SUCCESS })),
+    schedule: scheduleText(config.backup.schedule),
+    keyConfigured: /^[0-9a-f]{64}$/i.test(config.backup.key ?? ''),
+    message,
+    error: '',
+    scripts: ['/js/confirm.js'],
+    ...extra,
+  });
+}
+
+/** Сообщение об ошибке операции копирования для страницы (без внутренних подробностей). */
+const backupError = (err, fallback) => (err.status && err.status < 500 ? err.message : err.message || fallback);
 
 /**
  * Страницы администратора: панель, пользователи (ФТ-18), справочник (ФТ-13),
@@ -396,5 +457,49 @@ export class AdminController {
     const program = await findTemplate(req);
     await program.archive();
     res.redirect('/admin/templates?unpublished=1');
+  }
+
+  // ---------- Резервное копирование (ФТ-15) ----------
+
+  /** GET /admin/backups — копии, журнал операций, расписание. */
+  static async backups(req, res) {
+    await renderBackups(req, res);
+  }
+
+  /** POST /admin/backups — резервная копия по запросу администратора. */
+  static async backupCreate(req, res) {
+    try {
+      const log = await backupService.createBackup(req.user.id);
+      res.redirect(`/admin/backups?done=created&file=${encodeURIComponent(log.fileName)}`);
+    } catch (err) {
+      res.status(err.status ?? 500);
+      await renderBackups(req, res, { error: backupError(err, 'Не удалось создать резервную копию') });
+    }
+  }
+
+  /**
+   * POST /admin/backups/restore — восстановление БД из выбранной копии. Требуется подтверждение
+   * (confirm=yes): текущие данные заменяются данными копии. Операция записывается в журнал.
+   */
+  static async backupRestore(req, res) {
+    const fileName = typeof req.body?.fileName === 'string' ? req.body.fileName : '';
+    if (req.body?.confirm !== 'yes') {
+      res.status(400);
+      return renderBackups(req, res, { error: 'Подтвердите восстановление: отметьте, что текущие данные будут заменены' });
+    }
+    try {
+      await backupService.restore(fileName);
+    } catch (err) {
+      if (err.status !== 400 && err.status !== 404) {
+        await BackupLog.create({ adminId: req.user.id, fileName, type: BackupType.RESTORE, status: BackupStatus.ERROR })
+          .catch(() => {});
+      }
+      res.status(err.status ?? 500);
+      return renderBackups(req, res, { error: backupError(err, 'Не удалось восстановить базу данных') });
+    }
+    // Администратора может не быть в восстановленных данных — тогда запись в журнал невозможна (FK).
+    await BackupLog.create({ adminId: req.user.id, fileName, type: BackupType.RESTORE, status: BackupStatus.SUCCESS })
+      .catch(() => {});
+    res.redirect(`/admin/backups?done=restored&file=${encodeURIComponent(fileName)}`);
   }
 }

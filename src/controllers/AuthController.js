@@ -17,6 +17,47 @@ function getDummyHash() {
   return dummyHashPromise;
 }
 
+/**
+ * Учёт неудачных попыток входа под несуществующими логинами.
+ * Временная блокировка (429) у существующей учётной записи иначе отличала бы её от
+ * несуществующей; для неизвестных логинов применяется то же правило — 5 попыток подряд,
+ * блокировка на 15 минут (как User.MAX_FAILED_LOGINS и User.LOCK_MINUTES).
+ * Хранится в памяти процесса; размер ограничен, устаревшие записи удаляются.
+ */
+const UNKNOWN_LOGIN_LIMIT = 5;
+const UNKNOWN_LOCK_MS = 15 * 60 * 1000;
+const UNKNOWN_MAX_ENTRIES = 10_000;
+const unknownLogins = new Map();
+
+/** @returns {boolean} действует ли блокировка для неизвестного логина */
+export function isUnknownLoginLocked(login, now = Date.now()) {
+  const entry = unknownLogins.get(login.toLowerCase());
+  if (!entry) return false;
+  if (entry.lockedUntil && entry.lockedUntil <= now) {
+    unknownLogins.delete(login.toLowerCase());
+    return false;
+  }
+  return Boolean(entry.lockedUntil);
+}
+
+/** Неудачная попытка под неизвестным логином; на пятой — блокировка. */
+export function registerUnknownLogin(login, now = Date.now()) {
+  const key = login.toLowerCase();
+  if (unknownLogins.size >= UNKNOWN_MAX_ENTRIES && !unknownLogins.has(key)) {
+    for (const [k, v] of unknownLogins) {
+      if (!v.lockedUntil || v.lockedUntil <= now) unknownLogins.delete(k);
+    }
+    if (unknownLogins.size >= UNKNOWN_MAX_ENTRIES) unknownLogins.delete(unknownLogins.keys().next().value);
+  }
+  const entry = unknownLogins.get(key) ?? { failed: 0, lockedUntil: null };
+  entry.failed += 1;
+  if (entry.failed >= UNKNOWN_LOGIN_LIMIT) {
+    entry.failed = 0;
+    entry.lockedUntil = now + UNKNOWN_LOCK_MS;
+  }
+  unknownLogins.set(key, entry);
+}
+
 function regenerateSession(req) {
   return new Promise((resolve, reject) =>
     req.session.regenerate((err) => (err ? reject(err) : resolve())),
@@ -90,7 +131,11 @@ export class AuthController {
 
     const user = await User.findByLogin(login);
     if (!user) {
+      // Ответ и время ответа — как для существующего логина с неверным паролем.
+      if (isUnknownLoginLocked(login)) throw new HttpError(429, LOCKED_MESSAGE);
       await bcrypt.compare(password, await getDummyHash());
+      registerUnknownLogin(login);
+      if (isUnknownLoginLocked(login)) throw new HttpError(429, LOCKED_MESSAGE);
       throw new HttpError(401, INVALID_CREDENTIALS);
     }
 
