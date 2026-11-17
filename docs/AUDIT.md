@@ -69,7 +69,7 @@
 | ⚠️ параметр `client` у `Workout.calcTonnage` | src/models/Workout.js | Убрать, привести к `calcTonnage(): number` |
 | ➕ класс `HttpError` | src/middleware/errorHandler.js | Инфраструктура, не модель/сервис — оставить, упомянуть в записке |
 | ➕ класс `PageController` | src/controllers/PageController.js | Нет в списке контроллеров CLAUDE.md; при переходе на EJS разнести по Auth/Profile/…/AdminController |
-| ➕ `services/notImplemented.js`, `models/index.js`, `services/index.js` | — | Служебные; бочки убрать при переходе на `export default` (или оставить с реэкспортом default) |
+| ➕ ~~`services/notImplemented.js`~~ (удалён на этапе 13 — заглушка больше не вызывалась), `models/index.js`, `services/index.js` | — | Служебные; бочки оставлены (CLAUDE.md) |
 | ➕ `config/config.js`, `middleware/securityHeaders.js`, `middleware/errorHandler.js` | — | Нет в структуре CLAUDE.md; securityHeaders заменить на `helmet` (этап 12) |
 
 Методов, которых нет ни на диаграмме, ни в «Разрешённых дополнениях», кроме двух `toJSON()`, — нет.
@@ -146,5 +146,5 @@
 17. ✅ **Закрыт на этапе 9:** `StrengthMetrics` округляет до 0,1; typedef `Result` в WeightAdaptationService; `WeightAdaptationService` и `RecordDetector` реализованы, зависимость → StrengthMetrics в конструкторе. Было: Этап 9: округление до 0,1 в `StrengthMetrics`; typedef `Result`; ~~CHECK `reps` согласовать с 1–50~~ ✅ 0.2 (`BETWEEN 1 AND 50`).
 18. ✅ **Закрыт на этапе 10:** typedef `Series`, `BalanceReport`, `Regularity`; полный JSDoc публичных методов `ProgressAnalytics`; зависимость → StrengthMetrics в конструкторе. Было: Этап 10: typedef `Series/BalanceReport/Regularity`, полный JSDoc.
 19. ✅ **Закрыт на этапе 12:** helmet (CSP, HSTS при HTTPS) вместо `securityHeaders`; HTTPS на 3443/443 + редирект HTTP→HTTPS; `npm run cert`; сессии в PostgreSQL (connect-pg-simple, таблица `session`), cookie `sameSite: 'strict'`, `secure`; bcrypt cost ≥ 12; BackupService (pg_dump/pg_restore через execFile, AES-256-GCM, node-cron). Было: Этап 12: helmet вместо `securityHeaders`, `sameSite: 'strict'`, connect-pg-simple + таблица `session`, bcrypt cost 10 vs 12, HTTPS 443/3443 + редирект HTTP→HTTPS, `npm run cert`.
-20. Рис. 1.7: дорисовать `users.locked_until`. README: раздел «Открытые вопросы» п. 4 устарел (методы уже на диаграмме).
+20. ✅ **README поправлен на этапе 13** (п. 4 «Открытые вопросы» удалён). Сверка `npm run check:diagram` — 0 расхождений с диаграммой классов. **Остаётся вручную:** рис. 1.7 — дорисовать `users.locked_until`, рис. 1.8 — `ExerciseMedia.findById(id)` (см. `docs/diagram-delta.md`). Было: Рис. 1.7: дорисовать `users.locked_until`. README: раздел «Открытые вопросы» п. 4 устарел (методы уже на диаграмме).
 21. ✅ **Закрыт на этапе 0.2:** `static #MAX_FAILED_LOGINS = 5; // {readOnly}`, `static #LOCK_MINUTES = 15; // {readOnly}`. Было: мелочь: `{readOnly}` у `User.#MAX_FAILED_LOGINS/#LOCK_MINUTES` — объявить через `static get` или оставить с комментарием.

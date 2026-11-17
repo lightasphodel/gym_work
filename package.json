@@ -16,6 +16,8 @@
     "db:seed": "node scripts/seed.js",
     "admin:create": "node scripts/create-admin.js",
     "cert": "node scripts/cert.js",
+    "check:diagram": "node scripts/check-diagram.js",
+    "docs:listing": "node scripts/listing.js",
     "vendor": "node -e \"const fs=require('node:fs');fs.mkdirSync('public/vendor',{recursive:true});fs.copyFileSync('node_modules/chart.js/dist/chart.umd.min.js','public/vendor/chart.umd.min.js');fs.copyFileSync('node_modules/chart.js/LICENSE.md','public/vendor/chart.js-LICENSE.md')\""
   },
   "dependencies": {

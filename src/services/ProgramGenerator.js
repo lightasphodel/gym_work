@@ -64,7 +64,7 @@ const EQUIPMENT_FACTOR = Object.freeze({
   [BODYWEIGHT]: 0,
 });
 
-/** Ошибка, понятная пользователю (статус ответа — как у notImplemented). */
+/** Ошибка, понятная пользователю: status — код HTTP-ответа (400, 422). */
 function userError(status, message) {
   const err = new Error(message);
   err.status = status;
